@@ -4,7 +4,7 @@ export class JsUpdateDetector {
     // 配置参数，指定需要检测的JS路径
     this.options = {
       checkInterval: 300000, // 默认5分钟检测一次
-      jsSelector: 'script[src^="/assets/index-"]', // 匹配资产目录下的index开头JS
+      jsSelector: 'script[src*="/assets/index-"]', // 匹配资产目录下的index开头JS（支持各种路径格式）
       ...options
     }
 
@@ -22,15 +22,33 @@ export class JsUpdateDetector {
       const jsElement = document.querySelector(this.options.jsSelector)
       if (jsElement) {
         this.initialJsSrc = jsElement.src
-        console.log('初始JS路径:', this.initialJsSrc)
+        console.log('[UpdateDetector] 初始化成功，JS路径:', this.initialJsSrc)
 
         // 开始定期检测
         this.startChecking()
       } else {
-        console.error('未找到目标JS文件，无法初始化更新检测')
+        // 尝试备用选择器
+        const fallbackSelectors = [
+          'script[src*="index-"]',
+          'script[src*="/assets/"]',
+          'script[src$=".js"]'
+        ]
+        
+        for (const selector of fallbackSelectors) {
+          const el = document.querySelector(selector)
+          if (el && el.src && !el.src.includes('update-detector')) {
+            this.initialJsSrc = el.src
+            console.log('[UpdateDetector] 使用备用选择器初始化:', this.initialJsSrc)
+            this.startChecking()
+            return
+          }
+        }
+        
+        // 未找到目标JS文件，静默处理（不报错）
+        console.log('[UpdateDetector] 未找到目标JS文件，跳过更新检测')
       }
     } catch (error) {
-      console.error('初始化更新检测失败:', error)
+      console.log('[UpdateDetector] 初始化失败，跳过更新检测:', error.message)
     }
   }
 
@@ -41,6 +59,8 @@ export class JsUpdateDetector {
 
   // 检查JS路径是否有更新
   async checkForUpdates() {
+    if (!this.initialJsSrc) return
+    
     try {
       // 获取当前页面的HTML内容
       const response = await fetch(window.location.href, {
@@ -53,10 +73,31 @@ export class JsUpdateDetector {
       const parser = new DOMParser()
       const doc = parser.parseFromString(html, 'text/html')
 
-      // 从最新HTML中查找目标JS路径
-      const jsElement = doc.querySelector(this.options.jsSelector)
+      // 从最新HTML中查找目标JS路径（使用相同的逻辑）
+      let jsElement = doc.querySelector(this.options.jsSelector)
+      
+      // 如果主选择器失败，尝试备用选择器
       if (!jsElement) {
-        console.warn('未在最新页面中找到目标JS文件')
+        const fallbackSelectors = [
+          'script[src*="index-"]',
+          'script[src*="/assets/"]',
+          'script[src$=".js"]'
+        ]
+        
+        for (const selector of fallbackSelectors) {
+          const elements = doc.querySelectorAll(selector)
+          for (const el of elements) {
+            if (el.src && !el.src.includes('update-detector')) {
+              jsElement = el
+              break
+            }
+          }
+          if (jsElement) break
+        }
+      }
+      
+      if (!jsElement) {
+        console.log('[UpdateDetector] 未在最新页面中找到目标JS文件')
         return
       }
 
@@ -67,7 +108,7 @@ export class JsUpdateDetector {
         this.handleUpdateDetected()
       }
     } catch (error) {
-      console.error('检查更新失败:', error)
+      console.log('[UpdateDetector] 检查更新失败:', error.message)
     }
   }
 
