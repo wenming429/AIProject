@@ -13,9 +13,9 @@ const tabs = ref([
     })
   },
   {
-    name: '好友',
+    name: '置顶',
     value: computed(() => {
-      return talkStore.friendItems.length
+      return talkStore.topItems.length
     })
   },
   {
