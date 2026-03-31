@@ -1,0 +1,9 @@
+﻿go : # github.com/gzydong/go-chat/internal/service
+所在位置 行:1 字符: 41
++ ... s\LumenIM\backend; go build -o lumenim.exe ./cmd/lumenim 2>&1 | Out-F ...
++                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (# github.com/gz...nternal/service:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+internal\service\group_apply.go:38:12: cannot use groupId (variable of type int) as string value in struct literal
+internal\service\group_apply.go:39:12: cannot use userId (variable of type int) as string value in struct literal

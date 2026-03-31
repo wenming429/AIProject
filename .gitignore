@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+backend/vendor/
+
+# Build outputs
+*.exe
+*.dll
+*.so
+*.dylib
+backend/main
+backend/go-chat
+backend/dist/
+front/dist/
+front/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+*.cover
+*.out
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+
+# Uploads (if any)
+uploads/

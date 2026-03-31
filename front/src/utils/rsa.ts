@@ -1,0 +1,8 @@
+import JSEncrypt from 'jsencrypt'
+
+const encrypt = new JSEncrypt()
+encrypt.setPublicKey(import.meta.env.VITE_RSA_PUBLIC_KEY)
+
+export const rsaEncrypt = (data: string): string => {
+  return encrypt.encrypt(data) as string
+}

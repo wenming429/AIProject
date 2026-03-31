@@ -1,0 +1,122 @@
+version: '3.6'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: lumenim-mysql
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: go_chat
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Redis 缓存
+  redis:
+    image: redis:5.0
+    container_name: lumenim-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # Minio 对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: lumenim-minio
+    restart: always
+    ports:
+      - '9000:9000'
+      - '9090:9090'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9090"
+
+  # LumenIM HTTP 服务
+  lumenim_http:
+    image: gzydong/lumenim:latest
+    container_name: lumenim-http
+    depends_on:
+      - mysql
+      - redis
+      - minio
+    ports:
+      - '9503:9501'
+    restart: always
+    volumes:
+      - ./backend/config.yaml:/work/config.yaml
+      - ./backend/uploads:/work/uploads/:rw
+      - ./backend/runtime:/work/runtime
+    command: http --config=/work/config.yaml
+    networks:
+      - lumenim-network
+
+  # LumenIM WebSocket 服务
+  lumenim_comet:
+    image: gzydong/lumenim:latest
+    container_name: lumenim-comet
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - '9504:9502'
+    restart: always
+    volumes:
+      - ./backend/config.yaml:/work/config.yaml
+      - ./backend/runtime:/work/runtime
+    command: comet
+    networks:
+      - lumenim-network
+
+  # LumenIM 异步队列
+  lumenim_queue:
+    image: gzydong/lumenim:latest
+    container_name: lumenim-queue
+    depends_on:
+      - mysql
+      - redis
+      - minio
+    restart: always
+    volumes:
+      - ./backend/config.yaml:/work/config.yaml
+      - ./backend/uploads:/work/uploads/:rw
+      - ./backend/runtime:/work/runtime
+    command: queue
+    networks:
+      - lumenim-network
+
+  # LumenIM 定时任务
+  lumenim_cron:
+    image: gzydong/lumenim:latest
+    container_name: lumenim-cron
+    depends_on:
+      - mysql
+      - redis
+    restart: always
+    volumes:
+      - ./backend/config.yaml:/work/config.yaml
+      - ./backend/uploads:/work/uploads/:rw
+      - ./backend/runtime:/work/runtime
+    command: crontab
+    networks:
+      - lumenim-network
+
+networks:
+  lumenim-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
