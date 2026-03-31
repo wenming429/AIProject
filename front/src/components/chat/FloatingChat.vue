@@ -2,13 +2,13 @@
 import { useDialogueStore, useTalkStore, useUserStore } from '@/store'
 import Panel from '@/views/message/panel/Index.vue'
 import Sider from '@/views/message/sider/Index.vue'
-import { Message, People, ApplicationOne, SettingTwo, Close, Minus } from '@icon-park/vue-next'
-import { useRouter } from 'vue-router'
+import ContactLayout from '@/views/contact/layout.vue'
+import SettingIndex from '@/views/setting/index.vue'
+import { Message, People, ApplicationOne, SettingTwo, Close, Minus, Left } from '@icon-park/vue-next'
 
 const dialogueStore = useDialogueStore()
 const talkStore = useTalkStore()
 const userStore = useUserStore()
-const router = useRouter()
 const indexName = computed(() => dialogueStore.index_name)
 
 // 窗口状态 - 默认隐藏，窗口尺寸 880x640
@@ -69,25 +69,16 @@ const activeMenu = ref('message')
 // 点击左侧菜单
 const onLeftMenuClick = (menu: any) => {
   activeMenu.value = menu.key
-
-  switch (menu.key) {
-    case 'message':
-      // 保持在消息页面
-      break
-    case 'contact':
-      router.push('/contact')
-      close()
-      break
-    case 'apps':
-      // 应用页面
-      break
-  }
 }
 
 // 点击设置
 const onSettingsClick = () => {
-  router.push('/settings')
-  close()
+  activeMenu.value = 'settings'
+}
+
+// 返回消息页面
+const backToMessage = () => {
+  activeMenu.value = 'message'
 }
 
 // 记录拖拽开始位置
@@ -346,16 +337,29 @@ const hasActiveSession = computed(() => !!dialogueStore.index_name)
             </div>
           </aside>
 
-          <!-- 中间会话列表 -->
-          <aside class="window-session-list">
+          <!-- 中间会话列表 (仅在消息页面显示) -->
+          <aside v-if="activeMenu === 'message'" class="window-session-list">
             <Sider />
           </aside>
 
-          <!-- 右侧聊天区域 -->
+          <!-- 右侧内容区域 -->
           <main class="window-chat-area">
             <!-- 窗口标题栏 -->
             <div class="window-header drag-handle" @mousedown="onWindowDragStart">
-              <div class="window-title">{{ dialogueStore.target.username || '未选择聊天' }}</div>
+              <div class="window-title-wrapper">
+                <button 
+                  v-if="activeMenu !== 'message'" 
+                  class="back-btn"
+                  @click="backToMessage"
+                >
+                  <Left theme="outline" size="18" />
+                </button>
+                <span class="window-title">{{ 
+                  activeMenu === 'message' ? (dialogueStore.target.username || '未选择聊天') :
+                  activeMenu === 'contact' ? '通讯录' :
+                  activeMenu === 'settings' ? '设置' : '应用'
+                }}</span>
+              </div>
               <div class="window-controls">
                 <button class="control-btn minimize-btn" @click="minimize">
                   <Minus theme="filled" size="14" fill="#fff" />
@@ -366,16 +370,46 @@ const hasActiveSession = computed(() => !!dialogueStore.index_name)
               </div>
             </div>
 
-            <!-- 聊天内容 -->
+            <!-- 内容区域 -->
             <div class="chat-content">
-              <Panel v-if="hasActiveSession" />
-              <div v-else class="empty-chat">
-                <div class="empty-content">
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="4" width="20" height="16" rx="2" fill="#e0e0e0"/>
-                    <path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z" fill="#bbb"/>
-                  </svg>
-                  <p>未选择聊天</p>
+              <!-- 消息页面 -->
+              <template v-if="activeMenu === 'message'">
+                <Panel v-if="hasActiveSession" />
+                <div v-else class="empty-chat">
+                  <div class="empty-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="4" width="20" height="16" rx="2" fill="#e0e0e0"/>
+                      <path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z" fill="#bbb"/>
+                    </svg>
+                    <p>未选择聊天</p>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 通讯录页面 -->
+              <div v-else-if="activeMenu === 'contact'" class="embedded-view">
+                <ContactLayout class="embedded-contact" />
+              </div>
+
+              <!-- 设置页面 -->
+              <div v-else-if="activeMenu === 'settings'" class="embedded-view">
+                <SettingIndex class="embedded-setting" />
+              </div>
+
+              <!-- 应用页面 -->
+              <div v-else-if="activeMenu === 'apps'" class="embedded-view">
+                <div class="empty-chat">
+                  <div class="empty-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="2" width="20" height="20" rx="4" fill="#e0e0e0"/>
+                      <circle cx="8" cy="8" r="2" fill="#bbb"/>
+                      <circle cx="16" cy="8" r="2" fill="#bbb"/>
+                      <circle cx="8" cy="16" r="2" fill="#bbb"/>
+                      <circle cx="16" cy="16" r="2" fill="#bbb"/>
+                    </svg>
+                    <p>应用中心</p>
+                    <p class="sub-text">敬请期待</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -647,6 +681,28 @@ const hasActiveSession = computed(() => !!dialogueStore.index_name)
   overflow: hidden;
 }
 
+// 嵌入视图
+.embedded-view {
+  flex: 1;
+  overflow: auto;
+  background: #f5f5f5;
+
+  :deep(.contact-layout) {
+    height: 100%;
+  }
+
+  .embedded-contact,
+  .embedded-setting {
+    height: 100%;
+  }
+
+  .sub-text {
+    font-size: 12px;
+    color: #bbb;
+    margin-top: 8px;
+  }
+}
+
 // 右侧聊天区域
 .window-chat-area {
   flex: 1;
@@ -666,6 +722,31 @@ const hasActiveSession = computed(() => !!dialogueStore.index_name)
     cursor: move;
     user-select: none;
     flex-shrink: 0;
+
+    .window-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .back-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #e0e0e0;
+          color: #333;
+        }
+      }
+    }
 
     .window-title {
       font-size: 14px;
