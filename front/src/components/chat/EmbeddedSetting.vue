@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
-import { User, Shield, Bell, Palette, Link } from '@icon-park/vue-next'
+import { User, Protect, Remind, Palette, LinkThree } from '@icon-park/vue-next'
 import Detail from '@/views/setting/detail.vue'
 import Security from '@/views/setting/security.vue'
 import Notification from '@/views/setting/notification.vue'
@@ -11,10 +11,10 @@ const activeTab = ref('detail')
 
 const menus = reactive([
   { key: 'detail', name: '我的详情', icon: markRaw(User) },
-  { key: 'security', name: '账号安全', icon: markRaw(Shield) },
-  { key: 'notification', name: '消息通知', icon: markRaw(Bell) },
+  { key: 'security', name: '账号安全', icon: markRaw(Protect) },
+  { key: 'notification', name: '消息通知', icon: markRaw(Remind) },
   { key: 'personalize', name: '个性化', icon: markRaw(Palette) },
-  { key: 'binding', name: '账号绑定', icon: markRaw(Link) }
+  { key: 'binding', name: '账号绑定', icon: markRaw(LinkThree) }
 ])
 </script>
 
