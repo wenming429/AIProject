@@ -3,7 +3,7 @@ import { useDialogueStore, useTalkStore, useUserStore } from '@/store'
 import Panel from '@/views/message/panel/Index.vue'
 import Sider from '@/views/message/sider/Index.vue'
 import ContactLayout from '@/views/contact/layout.vue'
-import SettingIndex from '@/views/setting/index.vue'
+import SettingLayout from '@/views/setting/layout.vue'
 import { Message, People, ApplicationOne, SettingTwo, Close, Minus, Left } from '@icon-park/vue-next'
 
 const dialogueStore = useDialogueStore()
@@ -393,7 +393,7 @@ const hasActiveSession = computed(() => !!dialogueStore.index_name)
 
               <!-- 设置页面 -->
               <div v-else-if="activeMenu === 'settings'" class="embedded-view">
-                <SettingIndex class="embedded-setting" />
+                <SettingLayout class="embedded-setting" />
               </div>
 
               <!-- 应用页面 -->
