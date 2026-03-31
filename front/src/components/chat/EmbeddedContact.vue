@@ -170,6 +170,37 @@ function isExpanded(deptId: number): boolean {
   return expandedKeys.value.includes(deptId)
 }
 
+// 分割条拖动
+const sidebarWidth = ref(180)
+const isDragging = ref(false)
+const startX = ref(0)
+const startWidth = ref(180)
+
+function onDragStart(e: MouseEvent) {
+  isDragging.value = true
+  startX.value = e.clientX
+  startWidth.value = sidebarWidth.value
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', onDragEnd)
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
+
+function onDrag(e: MouseEvent) {
+  if (!isDragging.value) return
+  const delta = e.clientX - startX.value
+  const newWidth = startWidth.value + delta
+  sidebarWidth.value = Math.max(120, Math.min(400, newWidth))
+}
+
+function onDragEnd() {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', onDragEnd)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
 onMounted(() => {
   loadOrganizeData()
 })
@@ -207,7 +238,7 @@ onMounted(() => {
       <!-- 组织架构 - 左右分栏 -->
       <div v-else-if="activeTab === 'organize'" class="tab-content organize-layout">
         <!-- 左侧部门树 -->
-        <aside class="dept-sidebar">
+        <aside class="dept-sidebar" :style="{ width: sidebarWidth + 'px' }">
           <div class="sidebar-header">组织部门</div>
           <n-scrollbar class="dept-scroll">
             <div class="dept-tree">
@@ -224,6 +255,15 @@ onMounted(() => {
             </div>
           </n-scrollbar>
         </aside>
+
+        <!-- 拖动分割条 -->
+        <div
+          class="splitter"
+          :class="{ dragging: isDragging }"
+          @mousedown="onDragStart"
+        >
+          <div class="splitter-handle"></div>
+        </div>
 
         <!-- 右侧人员列表 -->
         <main class="member-panel">
@@ -365,7 +405,6 @@ export default {
 
         // 左侧部门树
         .dept-sidebar {
-          width: 180px;
           background: #fff;
           border-right: 1px solid #e8e8e8;
           display: flex;
@@ -386,6 +425,41 @@ export default {
             .dept-tree {
               padding: 8px 0;
             }
+          }
+        }
+
+        // 拖动分割条
+        .splitter {
+          width: 6px;
+          background: #f0f0f0;
+          cursor: col-resize;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          position: relative;
+          transition: background 0.2s;
+
+          &:hover {
+            background: #d9d9d9;
+
+            .splitter-handle {
+              opacity: 1;
+            }
+          }
+
+          &.dragging {
+            background: #1890ff;
+            user-select: none;
+          }
+
+          .splitter-handle {
+            width: 3px;
+            height: 20px;
+            background: #999;
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
           }
         }
 
