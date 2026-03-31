@@ -36,7 +36,17 @@ export const useTalkStore = defineStore('talk', {
 
       const item = this.findItem(params.index_name)
 
-      item && Object.assign(item, params)
+      if (item) {
+        Object.assign(item, params)
+        // 如果更新了置顶状态，重新排序列表
+        if (params.is_top !== undefined) {
+          this.items = this.items.sort((a: ISession, b: ISession) => {
+            if (a.is_top === 1 && b.is_top !== 1) return -1
+            if (a.is_top !== 1 && b.is_top === 1) return 1
+            return b.updated_at.localeCompare(a.updated_at)
+          })
+        }
+      }
     },
 
     addItem(item: ISession) {
