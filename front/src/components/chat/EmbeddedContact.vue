@@ -1,109 +1,187 @@
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
-import { People, Peoples, PeoplesTwo, ChartGraph, Mail } from '@icon-park/vue-next'
-import FriendApply from '@/views/contact/inner/FriendApply.vue'
-import GroupApply from '@/views/contact/inner/GroupApply.vue'
-import { reactive, computed, ref } from 'vue'
+import { useUserStore, useTalkStore } from '@/store'
+import { Peoples, ChartGraph, Right, DownOne, Male, Female, Search } from '@icon-park/vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { fetchOrganizeDepartmentList, fetchOrganizePersonnelList } from '@/apis/api'
+import { fetchApi } from '@/apis/request'
+import { useRouter } from 'vue-router'
+import { useInject } from '@/hooks'
 
 const userStore = useUserStore()
-const activeTab = ref('friend')
+const talkStore = useTalkStore()
+const router = useRouter()
+const { toShowUserInfo, message } = useInject()
 
-const isNew = computed(() => {
-  return userStore.isContactApply || userStore.isGroupApply
+// 当前激活的Tab: 'group' = 我的群聊, 'organize' = 组织架构
+const activeTab = ref('organize')
+
+// 组织架构相关数据
+const deptTree = ref<any[]>([])
+const personnelList = ref<any[]>([])
+const expandedKeys = ref<number[]>([])
+const keywords = ref('')
+
+// 切换Tab
+function switchTab(tab: string) {
+  activeTab.value = tab
+}
+
+// 构建部门树
+function buildTree(list: any[]): any[] {
+  const map: Record<number, any> = {}
+  list.forEach(item => {
+    map[item.dept_id] = { ...item, children: [] }
+  })
+  
+  const tree: any[] = []
+  list.forEach(item => {
+    if (item.parent_id && map[item.parent_id]) {
+      map[item.parent_id].children.push(map[item.dept_id])
+    } else {
+      tree.push(map[item.dept_id])
+    }
+  })
+  
+  return tree
+}
+
+// 加载组织架构数据
+async function loadOrganizeData() {
+  const [deptErr, deptData] = await fetchApi(fetchOrganizeDepartmentList, {})
+  if (!deptErr) {
+    const list = deptData.items || []
+    deptTree.value = buildTree(list)
+    // 默认展开第一级
+    if (deptTree.value.length > 0) {
+      expandedKeys.value = deptTree.value.map(d => d.dept_id)
+    }
+  }
+  
+  const [userErr, userData] = await fetchApi(fetchOrganizePersonnelList, {})
+  if (!userErr) {
+    const users = userData.items || []
+    users.forEach((item: any) => {
+      item.position_items.sort((a: any, b: any) => a.sort - b.sort)
+    })
+    personnelList.value = users
+  }
+}
+
+// 切换展开/收起
+function toggleExpand(dept: any, e: Event) {
+  e.stopPropagation()
+  const index = expandedKeys.value.indexOf(dept.dept_id)
+  if (index > -1) {
+    expandedKeys.value.splice(index, 1)
+  } else {
+    expandedKeys.value.push(dept.dept_id)
+  }
+}
+
+// 获取部门下的人员
+function getDeptUsers(deptId: number): any[] {
+  return personnelList.value.filter(p => p.dept_item?.dept_id === deptId)
+}
+
+// 发送消息
+function onToTalk(item: any, e: Event) {
+  e.stopPropagation()
+  if (userStore.uid != item.user_id) {
+    talkStore.toTalk(1, item.user_id, router)
+  } else {
+    message.info('禁止给自己发送消息!')
+  }
+}
+
+// 查看用户信息
+function onShowUserInfo(item: any) {
+  toShowUserInfo(item.user_id)
+}
+
+// 检查部门是否展开
+function isExpanded(deptId: number): boolean {
+  return expandedKeys.value.includes(deptId)
+}
+
+onMounted(() => {
+  loadOrganizeData()
 })
-
-const menus = reactive([
-  { key: 'friend', name: '我的好友', icon: markRaw(People) },
-  { key: 'group', name: '我的群聊', icon: markRaw(Peoples) },
-  { key: 'open-group', name: '公开群聊', icon: markRaw(PeoplesTwo) },
-  { key: 'organize', name: '企业组织', icon: markRaw(ChartGraph), show: computed(() => userStore.isQiye) }
-])
 </script>
 
 <template>
   <div class="embedded-contact">
-    <!-- 头部 -->
-    <header class="contact-header">
-      <div class="title">通讯录</div>
-      <n-popover trigger="click" placement="bottom-end">
-        <template #trigger>
-          <n-badge dot :show="isNew" :offset="[-5, 5]">
-            <div class="action-btn">
-              <n-icon :component="Mail" :size="18" />
-              <span>好友(群)通知</span>
-            </div>
-          </n-badge>
-        </template>
-        <n-tabs type="line" justify-content="start" pane-style="height: 400px; width: 320px;">
-          <n-tab-pane name="friend" tab="好友通知">
-            <n-scrollbar style="height: 400px">
-              <FriendApply />
-            </n-scrollbar>
-          </n-tab-pane>
-          <n-tab-pane name="group" tab="入群通知">
-            <n-scrollbar style="height: 400px">
-              <GroupApply />
-            </n-scrollbar>
-          </n-tab-pane>
-        </n-tabs>
-      </n-popover>
+    <!-- 顶部Tab切换 -->
+    <header class="contact-tabs">
+      <div 
+        class="tab-item" 
+        :class="{ active: activeTab === 'group' }"
+        @click="switchTab('group')"
+      >
+        <n-icon :component="Peoples" size="16" />
+        <span>我的群聊</span>
+      </div>
+      <div 
+        class="tab-item" 
+        :class="{ active: activeTab === 'organize' }"
+        @click="switchTab('organize')"
+      >
+        <n-icon :component="ChartGraph" size="16" />
+        <span>组织架构</span>
+      </div>
     </header>
 
     <!-- 内容区 -->
     <div class="contact-body">
-      <!-- 左侧子菜单 -->
-      <aside class="contact-sidebar">
-        <div
-          v-for="menu in menus"
-          :key="menu.key"
-          v-show="menu.show !== false"
-          class="menu-item"
-          :class="{ active: activeTab === menu.key }"
-          @click="activeTab = menu.key"
-        >
-          <n-icon :size="16" :component="menu.icon" />
-          <span>{{ menu.name }}</span>
+      <!-- 我的群聊 -->
+      <div v-if="activeTab === 'group'" class="tab-content">
+        <GroupList />
+      </div>
+      
+      <!-- 组织架构 -->
+      <div v-else-if="activeTab === 'organize'" class="tab-content organize-content">
+        <!-- 搜索栏 -->
+        <div class="organize-search">
+          <n-input
+            v-model:value="keywords"
+            placeholder="搜索成员"
+            clearable
+            size="small"
+          >
+            <template #prefix>
+              <n-icon :component="Search" />
+            </template>
+          </n-input>
         </div>
-      </aside>
-
-      <!-- 右侧内容 -->
-      <main class="contact-content">
-        <n-scrollbar>
-          <!-- 我的好友 -->
-          <div v-if="activeTab === 'friend'" class="tab-panel">
-            <FriendList />
-          </div>
-          <!-- 我的群聊 -->
-          <div v-else-if="activeTab === 'group'" class="tab-panel">
-            <GroupList />
-          </div>
-          <!-- 公开群聊 -->
-          <div v-else-if="activeTab === 'open-group'" class="tab-panel">
-            <OpenGroupList />
-          </div>
-          <!-- 企业组织 -->
-          <div v-else-if="activeTab === 'organize'" class="tab-panel organize-panel">
-            <EmbeddedOrganize />
+        
+        <!-- 组织树 -->
+        <n-scrollbar class="organize-scroll">
+          <div class="organize-tree">
+            <!-- 递归组件渲染部门树 -->
+            <OrganizeTreeNode
+              v-for="dept in deptTree"
+              :key="dept.dept_id"
+              :dept="dept"
+              :expanded-keys="expandedKeys"
+              :personnel-list="personnelList"
+              @toggle-expand="toggleExpand"
+              @to-talk="onToTalk"
+              @show-user-info="onShowUserInfo"
+            />
           </div>
         </n-scrollbar>
-      </main>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-// 导入子组件
-import FriendList from '@/views/contact/friend.vue'
 import GroupList from '@/views/contact/group.vue'
-import OpenGroupList from '@/views/contact/open-group.vue'
-import EmbeddedOrganize from './EmbeddedOrganize.vue'
+import OrganizeTreeNode from './OrganizeTreeNode.vue'
 
 export default {
   components: {
-    FriendList,
     GroupList,
-    OpenGroupList,
-    EmbeddedOrganize
+    OrganizeTreeNode
   }
 }
 </script>
@@ -115,86 +193,75 @@ export default {
   flex-direction: column;
   background: #f5f5f5;
 
-  .contact-header {
-    height: 48px;
+  // 顶部Tab切换
+  .contact-tabs {
+    display: flex;
     background: #fff;
     border-bottom: 1px solid #e8e8e8;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
     flex-shrink: 0;
 
-    .title {
-      font-size: 16px;
-      font-weight: 500;
-      color: #333;
-    }
-
-    .action-btn {
+    .tab-item {
+      flex: 1;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-      padding: 6px 12px;
-      border-radius: 4px;
+      padding: 12px 0;
       cursor: pointer;
+      font-size: 14px;
       color: #666;
-      font-size: 13px;
       transition: all 0.2s;
+      position: relative;
 
       &:hover {
-        background: #f0f0f0;
         color: #333;
+        background: #f5f5f5;
+      }
+
+      &.active {
+        color: #8B0000;
+        font-weight: 500;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 20%;
+          right: 20%;
+          height: 2px;
+          background: #8B0000;
+          border-radius: 2px;
+        }
       }
     }
   }
 
+  // 内容区
   .contact-body {
     flex: 1;
-    display: flex;
     overflow: hidden;
 
-    .contact-sidebar {
-      width: 150px;
-      background: #fff;
-      border-right: 1px solid #e8e8e8;
-      padding: 8px;
-      flex-shrink: 0;
+    .tab-content {
+      height: 100%;
 
-      .menu-item {
-        height: 36px;
-        padding: 0 12px;
+      &.organize-content {
         display: flex;
-        align-items: center;
-        gap: 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-        color: #333;
-        transition: all 0.2s;
-        margin-bottom: 4px;
+        flex-direction: column;
 
-        &:hover {
-          background: #f5f5f5;
+        .organize-search {
+          padding: 10px 12px;
+          background: #fff;
+          border-bottom: 1px solid #f0f0f0;
+          flex-shrink: 0;
         }
 
-        &.active {
-          background: #8B0000;
-          color: #fff;
-        }
-      }
-    }
+        .organize-scroll {
+          flex: 1;
+          background: #fff;
 
-    .contact-content {
-      flex: 1;
-      overflow: hidden;
-
-      .tab-panel {
-        padding: 12px;
-        height: 100%;
-
-        &.organize-panel {
-          padding: 0;
+          .organize-tree {
+            padding: 8px 0;
+          }
         }
       }
     }
