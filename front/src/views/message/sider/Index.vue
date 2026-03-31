@@ -13,7 +13,6 @@ import SearchHeader from './SearchHeader.vue'
 import Skeleton from './Skeleton.vue'
 import TabsHeader from './TabsHeader.vue'
 import TalkItem from './TalkItem.vue'
-import TopHeader from './TopHeader.vue'
 import { useSessionMenu } from './useSessionMenu.ts'
 
 const { ContextMenuElement, onContextMenu, onToTopTalk } = useSessionMenu()
@@ -154,14 +153,7 @@ useEventBus([
       "
     />
 
-    <!-- 置顶栏目 -->
-    <TopHeader
-      :index-name="indexName"
-      :items="talkStore.topItems"
-      v-show="loadStatus === 3 && talkStore.topItems.length > 0"
-      @tab-talk="(value: any) => onTabTalk(value, true)"
-      @unpin-talk="onToTopTalk"
-    />
+    <!-- 置顶栏目已隐藏，置顶会话直接排在列表最上方 -->
 
     <!-- tabs栏目 -->
     <TabsHeader v-show="loadStatus === 3" v-model="selectIndex" />

@@ -68,10 +68,12 @@ export const useTalkStore = defineStore('talk', {
       item.msg_text = params.msg_text
       item.updated_at = params.updated_at
 
-      if (index !== 0) {
-        this.items.splice(index, 1)
-        this.items.unshift(item)
-      }
+      // 重新排序：置顶会话保持在顶部，其他按时间排序
+      this.items = this.items.sort((a: ISession, b: ISession) => {
+        if (a.is_top === 1 && b.is_top !== 1) return -1
+        if (a.is_top !== 1 && b.is_top === 1) return 1
+        return b.updated_at.localeCompare(a.updated_at)
+      })
     },
 
     clearUnreadNum(index_name: string) {
@@ -108,8 +110,12 @@ export const useTalkStore = defineStore('talk', {
           return value
         }) || []
 
-      // 排序
+      // 排序：置顶会话优先，然后按更新时间排序
       this.items = items.sort((a: ISession, b: ISession) => {
+        // 置顶会话排在最前面
+        if (a.is_top === 1 && b.is_top !== 1) return -1
+        if (a.is_top !== 1 && b.is_top === 1) return 1
+        // 同为置顶或同为非置顶，按更新时间排序
         return b.updated_at.localeCompare(a.updated_at)
       })
     },
