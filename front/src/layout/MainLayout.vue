@@ -31,8 +31,9 @@ import Sponsor from './component/Sponsor.vue'
   background-color: var(--im-bg-color);
 
   .el-aside {
-    width: 60px;
+    width: 65px;
     box-sizing: border-box;
+    background-color: #8B0000;
   }
 }
 </style>

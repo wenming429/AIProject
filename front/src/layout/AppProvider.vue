@@ -12,7 +12,8 @@ import { DEFAULT_ICON_CONFIGS, IconProvider } from '@icon-park/vue-next'
 import '@icon-park/vue-next/styles/index.css'
 import hljs from 'highlight.js/lib/core'
 import { dateZhCN, zhCN } from 'naive-ui'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import FloatingChatWidget from '@/components/chat/FloatingChatWidget.vue'
 
 IconProvider({
   ...DEFAULT_ICON_CONFIGS,
@@ -24,7 +25,16 @@ IconProvider({
 
 const { getDarkTheme, getThemeOverride } = useThemeMode()
 
+// 悬浮聊天窗口组件引用
+const floatingChatRef = ref()
+
+// 全局暴露悬浮聊天窗口控制方法
 onMounted(() => {
+  ;(window as any).floatingChat = {
+    open: () => floatingChatRef.value?.open?.(),
+    close: () => floatingChatRef.value?.close?.()
+  }
+
   useVisibilityChange()
   useAccessPrompt()
   useUnreadMessage()
@@ -60,5 +70,8 @@ onMounted(() => {
     <n-layout-content>
       <slot></slot>
     </n-layout-content>
+
+    <!-- 悬浮聊天窗口 -->
+    <FloatingChatWidget ref="floatingChatRef" />
   </n-config-provider>
 </template>

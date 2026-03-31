@@ -11,7 +11,7 @@ const router = useRouter()
 const settingsStore = useSettingsStore()
 
 const color = computed(() => {
-  return settingsStore.currentThemeMode == 'dark' ? '#ffffff' : '#333'
+  return '#ffffff'
 })
 
 const menus = reactive([
@@ -119,10 +119,10 @@ const isActive = (menu) => {
         <div>
           <component
             :is="nav.icon"
-            :theme="isActive(nav) ? 'filled' : 'outline'"
-            :fill="isActive(nav) ? '#1890ff' : color"
+            theme="outline"
+            :fill="isActive(nav) ? '#5FA8D3' : '#ffffff'"
             :strokeWidth="2"
-            :size="22"
+            :size="24"
           />
         </div>
 
@@ -133,10 +133,10 @@ const isActive = (menu) => {
     <footer class="menu-footer">
       <div>
         <a class="pointer" href="https://github.com/gzydong/LumenIM" target="_blank">
-          <github-one theme="outline" size="22" :fill="color" :strokeWidth="2" />
+          <github-one theme="outline" size="22" fill="#ffffff" :strokeWidth="2" />
         </a>
       </div>
-      <div @click="onShowLogoutMenu" class="pointer">退出</div>
+      <div @click="onShowLogoutMenu" class="pointer" style="color: #ffffff;">退出</div>
     </footer>
 
     <!-- 退出菜单弹窗 -->
@@ -179,7 +179,7 @@ const isActive = (menu) => {
       margin-top: 5px;
       font-size: 13px;
       font-weight: 300;
-      color: rgb(185, 181, 181);
+      color: rgba(255, 255, 255, 0.7);
 
       &.online {
         color: #65c468;
@@ -202,6 +202,11 @@ const isActive = (menu) => {
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #ffffff;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
     }
   }
 }
@@ -214,12 +219,37 @@ const isActive = (menu) => {
   justify-content: center;
   user-select: none;
   cursor: pointer;
-  border-radius: 3px;
   font-size: 12px;
-  width: 54px;
-  height: 54px;
-  margin: 8px auto;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  margin: 5px auto;
+  border-radius: 8px;
+  color: #ffffff;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.active {
+    background-color: rgba(255, 255, 255, 0.15);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #5FA8D3;
+      border-radius: 0 2px 2px 0;
+    }
+  }
+
+  span {
+    color: #ffffff;
+  }
 
   .hotspot {
     width: 5px;
