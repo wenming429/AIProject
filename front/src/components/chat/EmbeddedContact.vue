@@ -170,8 +170,8 @@ function isExpanded(deptId: number): boolean {
   return expandedKeys.value.includes(deptId)
 }
 
-// 分割条拖动
-const sidebarWidth = ref(180)
+// 分割条拖动 - 默认1:2比例（总宽度约540px时，侧边栏180px）
+const sidebarWidth = ref(200)
 const isDragging = ref(false)
 const startX = ref(0)
 const startWidth = ref(180)
@@ -330,7 +330,7 @@ onMounted(() => {
 </template>
 
 <script lang="ts">
-import GroupList from '@/views/contact/group.vue'
+import GroupList from './GroupList.vue'
 import DeptTreeNode from './DeptTreeNode.vue'
 
 export default {
@@ -497,7 +497,7 @@ export default {
             }
 
             .search-input {
-              width: 160px;
+              width: 240px;
             }
           }
 
