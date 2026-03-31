@@ -49,3 +49,6 @@ temp/
 
 # Uploads (if any)
 uploads/
+
+# Minio data files
+backend/data/.minio.sys/
