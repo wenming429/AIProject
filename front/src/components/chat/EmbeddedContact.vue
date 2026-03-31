@@ -82,8 +82,8 @@ const menus = reactive([
             <OpenGroupList />
           </div>
           <!-- 企业组织 -->
-          <div v-else-if="activeTab === 'organize'" class="tab-panel">
-            <OrganizeList />
+          <div v-else-if="activeTab === 'organize'" class="tab-panel organize-panel">
+            <EmbeddedOrganize />
           </div>
         </n-scrollbar>
       </main>
@@ -96,14 +96,14 @@ const menus = reactive([
 import FriendList from '@/views/contact/friend.vue'
 import GroupList from '@/views/contact/group.vue'
 import OpenGroupList from '@/views/contact/open-group.vue'
-import OrganizeList from '@/views/contact/organize.vue'
+import EmbeddedOrganize from './EmbeddedOrganize.vue'
 
 export default {
   components: {
     FriendList,
     GroupList,
     OpenGroupList,
-    OrganizeList
+    EmbeddedOrganize
   }
 }
 </script>
@@ -191,6 +191,11 @@ export default {
 
       .tab-panel {
         padding: 12px;
+        height: 100%;
+
+        &.organize-panel {
+          padding: 0;
+        }
       }
     }
   }
