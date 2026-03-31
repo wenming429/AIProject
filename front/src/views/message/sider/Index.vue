@@ -31,10 +31,8 @@ const items = computed(() => {
   if (searchKeyword.value.length === 0) {
     switch (selectIndex.value) {
       case 1:
-        return talkStore.topItems
-      case 2:
         return talkStore.groupItems
-      case 3:
+      case 2:
         return talkStore.unreadItems
       default:
         return talkStore.items

@@ -37,14 +37,25 @@ export const useTalkStore = defineStore('talk', {
       const item = this.findItem(params.index_name)
 
       if (item) {
+        const oldIsTop = item.is_top
         Object.assign(item, params)
-        // 如果更新了置顶状态，重新排序列表
-        if (params.is_top !== undefined) {
-          this.items = this.items.sort((a: ISession, b: ISession) => {
-            if (a.is_top === 1 && b.is_top !== 1) return -1
-            if (a.is_top !== 1 && b.is_top === 1) return 1
-            return b.updated_at.localeCompare(a.updated_at)
-          })
+        
+        // 如果更新了置顶状态
+        if (params.is_top !== undefined && params.is_top !== oldIsTop) {
+          const index = this.findIndex(params.index_name)
+          if (index === -1) return
+          
+          // 从当前位置移除
+          const [removedItem] = this.items.splice(index, 1)
+          
+          if (params.is_top === 1) {
+            // 置顶：放到列表第一位（所有置顶对象的最前面）
+            this.items.unshift(removedItem)
+          } else {
+            // 取消置顶：放到所有置顶对象的下面（非置顶区域第一位）
+            const topCount = this.items.filter(i => i.is_top === 1).length
+            this.items.splice(topCount, 0, removedItem)
+          }
         }
       }
     },

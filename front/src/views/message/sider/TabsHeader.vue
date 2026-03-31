@@ -13,12 +13,6 @@ const tabs = ref([
     })
   },
   {
-    name: '置顶',
-    value: computed(() => {
-      return talkStore.topItems.length
-    })
-  },
-  {
     name: '群聊',
     value: computed(() => {
       return talkStore.groupItems.length
