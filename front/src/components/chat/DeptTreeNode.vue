@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { Right, DownOne } from '@icon-park/vue-next'
 
 const props = defineProps<{
