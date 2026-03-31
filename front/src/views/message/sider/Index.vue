@@ -160,6 +160,7 @@ useEventBus([
       :items="talkStore.topItems"
       v-show="loadStatus === 3 && talkStore.topItems.length > 0"
       @tab-talk="(value: any) => onTabTalk(value, true)"
+      @unpin-talk="onToTopTalk"
     />
 
     <!-- tabs栏目 -->
