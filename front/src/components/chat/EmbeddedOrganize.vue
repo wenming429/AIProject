@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { useUserStore, useTalkStore } from '@/store'
-import { Search, Male, Female, Right, DownOne } from '@icon-park/vue-next'
+import { Search, Male, Female, Right, DownOne, AddOne, ListView, TreeDiagram } from '@icon-park/vue-next'
 import { useInject } from '@/hooks'
 import { ref, computed, h, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchOrganizeDepartmentList, fetchOrganizePersonnelList } from '@/apis/api'
 import { fetchApi } from '@/apis/request'
-import { NTag } from 'naive-ui'
 
 const userStore = useUserStore()
 const talkStore = useTalkStore()
@@ -18,9 +17,10 @@ const deptTree = ref<any[]>([])
 const personnelList = ref<any[]>([])
 const expandedKeys = ref<number[]>([])
 const selectedDeptId = ref<number | null>(null)
+const viewMode = ref<'list' | 'tree'>('list') // 视图模式：列表/树状
 
-// 将部门列表转为树形结构
-function buildTree(list: any[]): any[] {
+// 构建部门树，添加"企业组织"作为根节点
+function buildTreeWithRoot(list: any[]): any[] {
   const map: Record<number, any> = {}
   list.forEach(item => {
     map[item.dept_id] = { ...item, children: [] }
@@ -35,28 +35,24 @@ function buildTree(list: any[]): any[] {
     }
   })
   
-  return tree
-}
-
-// 递归获取所有部门ID
-function getAllDeptIds(tree: any[]): number[] {
-  const ids: number[] = []
-  tree.forEach(node => {
-    ids.push(node.dept_id)
-    if (node.children?.length) {
-      ids.push(...getAllDeptIds(node.children))
-    }
-  })
-  return ids
+  // 添加企业组织作为根节点
+  return [{
+    dept_id: 0,
+    dept_name: '企业组织',
+    parent_id: null,
+    children: tree,
+    isRoot: true
+  }]
 }
 
 // 过滤人员
 const filteredPersonnel = computed(() => {
   let list = personnelList.value
   
-  // 按部门筛选
-  if (selectedDeptId.value) {
-    const selectedDept = findDeptById(deptTree.value, selectedDeptId.value)
+  // 按部门筛选（如果选中了具体部门，不是根节点）
+  if (selectedDeptId.value !== null && selectedDeptId.value !== 0) {
+    const allDepts = flattenDeptTree(deptTree.value)
+    const selectedDept = allDepts.find(d => d.dept_id === selectedDeptId.value)
     if (selectedDept) {
       const deptIds = [selectedDept.dept_id, ...getChildDeptIds(selectedDept)]
       list = list.filter(p => deptIds.includes(p.dept_item?.dept_id))
@@ -76,16 +72,16 @@ const filteredPersonnel = computed(() => {
   return list.sort((a, b) => a.nickname.localeCompare(b.nickname, 'zh-CN'))
 })
 
-// 查找部门
-function findDeptById(tree: any[], id: number): any {
-  for (const node of tree) {
-    if (node.dept_id === id) return node
+// 扁平化部门树
+function flattenDeptTree(tree: any[]): any[] {
+  const result: any[] = []
+  tree.forEach(node => {
+    result.push(node)
     if (node.children?.length) {
-      const found = findDeptById(node.children, id)
-      if (found) return found
+      result.push(...flattenDeptTree(node.children))
     }
-  }
-  return null
+  })
+  return result
 }
 
 // 获取子部门ID列表
@@ -106,12 +102,11 @@ async function loadDepartments() {
   if (err) return
   
   const list = data.items || []
-  deptTree.value = buildTree(list)
+  deptTree.value = buildTreeWithRoot(list)
   
-  // 默认展开第一级
-  if (deptTree.value.length > 0) {
-    expandedKeys.value = deptTree.value.map(d => d.dept_id)
-  }
+  // 默认展开根节点
+  expandedKeys.value = [0]
+  selectedDeptId.value = 0
 }
 
 // 加载人员数据
@@ -157,31 +152,35 @@ function selectDept(dept: any) {
   selectedDeptId.value = dept.dept_id
 }
 
+// 邀请成员
+function onInviteMember() {
+  message.info('邀请成员功能开发中...')
+}
+
 // 递归渲染部门树
 function renderDeptTree(tree: any[], level = 0) {
   return tree.map(dept => {
     const isExpanded = expandedKeys.value.includes(dept.dept_id)
     const isSelected = selectedDeptId.value === dept.dept_id
     const hasChildren = dept.children?.length > 0
+    const isRoot = dept.isRoot
     
     // 计算该部门下的人员数量
-    const count = personnelList.value.filter(p => {
-      const pDeptId = p.dept_item?.dept_id
-      if (pDeptId === dept.dept_id) return true
-      // 如果展开，也计算子部门人员
-      if (isExpanded) {
-        const childIds = getChildDeptIds(dept)
-        return childIds.includes(pDeptId)
-      }
-      return false
-    }).length
+    const count = isRoot 
+      ? personnelList.value.length 
+      : personnelList.value.filter(p => {
+          const pDeptId = p.dept_item?.dept_id
+          if (pDeptId === dept.dept_id) return true
+          const childIds = getChildDeptIds(dept)
+          return childIds.includes(pDeptId)
+        }).length
     
     return h('div', {
-      class: 'dept-node',
-      style: { paddingLeft: `${level * 16}px` }
+      class: ['dept-node', { 'is-root': isRoot }],
+      style: { paddingLeft: `${level * 12 + 8}px` }
     }, [
       h('div', {
-        class: ['dept-item', { selected: isSelected }],
+        class: ['dept-item', { selected: isSelected, 'is-root': isRoot }],
         onClick: () => selectDept(dept)
       }, [
         hasChildren ? h('span', {
@@ -191,8 +190,9 @@ function renderDeptTree(tree: any[], level = 0) {
             toggleExpand(dept)
           }
         }, h(isExpanded ? DownOne : Right, { theme: 'filled', size: 12 })) : h('span', { class: 'expand-placeholder' }),
+        isRoot ? h('span', { class: 'root-icon' }, '🏢') : null,
         h('span', { class: 'dept-name' }, dept.dept_name),
-        h('span', { class: 'dept-count' }, `${count}人`)
+        h('span', { class: 'dept-count' }, `${count}`)
       ]),
       hasChildren && isExpanded ? h('div', { class: 'dept-children' }, renderDeptTree(dept.children, level + 1)) : null
     ])
@@ -207,72 +207,129 @@ onMounted(() => {
 
 <template>
   <div class="embedded-organize">
-    <!-- 搜索栏 -->
-    <header class="organize-header">
-      <n-input
-        v-model:value="keywords"
-        placeholder="搜索成员"
-        clearable
-        size="small"
-        style="width: 100%"
-      >
-        <template #prefix>
-          <n-icon :component="Search" />
-        </template>
-      </n-input>
-    </header>
+    <!-- 左侧部门树 -->
+    <aside class="dept-sidebar">
+      <div class="sidebar-header">
+        <span class="header-title">组织架构</span>
+      </div>
+      <n-scrollbar class="tree-scroll">
+        <div class="tree-content">
+          <component :is="() => renderDeptTree(deptTree)" />
+        </div>
+      </n-scrollbar>
+    </aside>
 
-    <!-- 内容区 -->
-    <div class="organize-body">
-      <!-- 左侧部门树 -->
-      <aside class="dept-tree">
-        <div class="tree-header">企业组织</div>
-        <n-scrollbar>
-          <div class="tree-content">
-            <component :is="() => renderDeptTree(deptTree)" />
+    <!-- 右侧成员列表 -->
+    <main class="member-main">
+      <!-- 顶部工具栏 -->
+      <header class="member-header">
+        <div class="header-left">
+          <span class="current-dept">
+            {{ selectedDeptId === 0 ? '企业组织' : flattenDeptTree(deptTree).find(d => d.dept_id === selectedDeptId)?.dept_name }}
+          </span>
+          <span class="member-count">({{ filteredPersonnel.length }}人)</span>
+        </div>
+        <div class="header-right">
+          <!-- 视图切换 -->
+          <n-radio-group v-model:value="viewMode" size="small" class="view-switch">
+            <n-radio-button value="list">
+              <n-icon :component="ListView" size="14" />
+              <span>列表视图</span>
+            </n-radio-button>
+            <n-radio-button value="tree">
+              <n-icon :component="TreeDiagram" size="14" />
+              <span>树状视图</span>
+            </n-radio-button>
+          </n-radio-group>
+          
+          <!-- 搜索框 -->
+          <n-input
+            v-model:value="keywords"
+            placeholder="搜索"
+            clearable
+            size="small"
+            class="search-input"
+          >
+            <template #prefix>
+              <n-icon :component="Search" />
+            </template>
+          </n-input>
+        </div>
+      </header>
+
+      <!-- 邀请成员按钮 -->
+      <div class="invite-section">
+        <div class="invite-btn" @click="onInviteMember">
+          <div class="invite-icon">
+            <n-icon :component="AddOne" size="20" />
           </div>
-        </n-scrollbar>
-      </aside>
+          <span class="invite-text">邀请成员加入</span>
+        </div>
+      </div>
 
-      <!-- 右侧成员列表 -->
-      <main class="member-list">
-        <n-scrollbar>
-          <div v-if="filteredPersonnel.length" class="member-items">
-            <div
-              v-for="item in filteredPersonnel"
-              :key="item.user_id"
-              class="member-item"
-            >
-              <div class="member-avatar" @click="onShowUserInfo(item)">
-                <im-avatar :src="item.avatar" :size="36" :username="item.nickname" />
+      <!-- 成员列表 -->
+      <n-scrollbar class="member-scroll">
+        <div v-if="filteredPersonnel.length" class="member-list">
+          <div
+            v-for="item in filteredPersonnel"
+            :key="item.user_id"
+            class="member-card"
+            @click="onShowUserInfo(item)"
+          >
+            <!-- 头像 -->
+            <div class="member-avatar-wrapper">
+              <im-avatar 
+                :src="item.avatar" 
+                :size="40" 
+                :username="item.nickname"
+                class="member-avatar"
+              />
+            </div>
+            
+            <!-- 信息 -->
+            <div class="member-info">
+              <div class="member-row">
+                <span class="member-name">{{ item.nickname }}</span>
+                <!-- 管理员标签 -->
+                <n-tag 
+                  v-if="item.is_admin" 
+                  size="tiny" 
+                  type="warning"
+                  class="admin-tag"
+                >管理员</n-tag>
+                <n-tag 
+                  v-if="item.is_owner" 
+                  size="tiny" 
+                  type="error"
+                  class="owner-tag"
+                >所有者</n-tag>
               </div>
-              <div class="member-info" @click="onShowUserInfo(item)">
-                <div class="member-name">
-                  <n-icon v-if="item.gender == 1" :component="Male" color="#508afe" size="14" />
-                  <n-icon v-if="item.gender == 2" :component="Female" color="#ff5722" size="14" />
-                  <span>{{ item.remark || item.nickname }}</span>
-                  <n-tag
-                    v-for="(pos, index) in item.position_items"
-                    :key="index"
-                    size="tiny"
-                    type="info"
-                  >{{ pos.name }}</n-tag>
-                </div>
-                <div class="member-dept">{{ item.dept_item?.dept_name }}</div>
-              </div>
-              <div class="member-action">
-                <n-button text size="tiny" type="primary" @click="onToTalk(item)">
-                  发消息
-                </n-button>
+              <div class="member-row secondary">
+                <span v-if="item.position_items?.length" class="member-position">
+                  {{ item.position_items.map(p => p.name).join('、') }}
+                </span>
+                <span v-else class="member-dept">{{ item.dept_item?.dept_name }}</span>
               </div>
             </div>
+
+            <!-- 操作 -->
+            <div class="member-action">
+              <n-button 
+                text 
+                size="small" 
+                type="primary"
+                @click.stop="onToTalk(item)"
+              >
+                发消息
+              </n-button>
+            </div>
           </div>
-          <div v-else class="empty-state">
-            <n-empty description="暂无成员" size="small" />
-          </div>
-        </n-scrollbar>
-      </main>
-    </div>
+        </div>
+        <div v-else class="empty-state">
+          <n-empty description="暂无成员" size="small" />
+        </div>
+      </n-scrollbar>
+    </main>
   </div>
 </template>
 
@@ -280,60 +337,76 @@ onMounted(() => {
 .embedded-organize {
   height: 100%;
   display: flex;
-  flex-direction: column;
   background: #f5f5f5;
 
-  .organize-header {
-    padding: 10px 12px;
+  // 左侧部门树
+  .dept-sidebar {
+    width: 180px;
     background: #fff;
-    border-bottom: 1px solid #e8e8e8;
-    flex-shrink: 0;
-  }
-
-  .organize-body {
-    flex: 1;
+    border-right: 1px solid #e8e8e8;
     display: flex;
-    overflow: hidden;
+    flex-direction: column;
+    flex-shrink: 0;
 
-    .dept-tree {
-      width: 160px;
-      background: #fff;
-      border-right: 1px solid #e8e8e8;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-
-      .tree-header {
-        padding: 10px 12px;
-        font-size: 13px;
+    .sidebar-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      
+      .header-title {
+        font-size: 14px;
         font-weight: 500;
         color: #333;
-        border-bottom: 1px solid #f0f0f0;
       }
+    }
 
+    .tree-scroll {
+      flex: 1;
+      
       .tree-content {
         padding: 8px 0;
 
         .dept-node {
+          &.is-root {
+            > .dept-item {
+              font-weight: 500;
+            }
+          }
+
           .dept-item {
             display: flex;
             align-items: center;
-            padding: 6px 12px;
+            padding: 8px 12px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
             color: #333;
             transition: all 0.2s;
+            margin: 2px 8px;
+            border-radius: 4px;
 
             &:hover {
               background: #f5f5f5;
             }
 
             &.selected {
-              background: #8B0000;
-              color: #fff;
+              background: #e6f7ff;
+              color: #1890ff;
+              font-weight: 500;
 
               .dept-count {
-                color: rgba(255, 255, 255, 0.7);
+                color: #1890ff;
+              }
+            }
+
+            &.is-root {
+              background: #f6ffed;
+              
+              &.selected {
+                background: #d9f7be;
+                color: #52c41a;
+                
+                .dept-count {
+                  color: #52c41a;
+                }
               }
             }
 
@@ -346,6 +419,7 @@ onMounted(() => {
               margin-right: 4px;
               cursor: pointer;
               border-radius: 2px;
+              color: #999;
 
               &:hover {
                 background: rgba(0, 0, 0, 0.05);
@@ -355,6 +429,11 @@ onMounted(() => {
             .expand-placeholder {
               width: 16px;
               margin-right: 4px;
+            }
+
+            .root-icon {
+              margin-right: 6px;
+              font-size: 14px;
             }
 
             .dept-name {
@@ -368,72 +447,199 @@ onMounted(() => {
               font-size: 11px;
               color: #999;
               margin-left: 4px;
+              background: #f0f0f0;
+              padding: 0 6px;
+              border-radius: 10px;
+              min-width: 20px;
+              text-align: center;
             }
           }
         }
       }
     }
+  }
 
-    .member-list {
-      flex: 1;
-      overflow: hidden;
-      background: #f5f5f5;
+  // 右侧主区域
+  .member-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
-      .member-items {
-        padding: 8px;
+    // 顶部工具栏
+    .member-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
 
-        .member-item {
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .current-dept {
+          font-size: 15px;
+          font-weight: 500;
+          color: #333;
+        }
+
+        .member-count {
+          font-size: 13px;
+          color: #999;
+        }
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .view-switch {
+          .n-radio-button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            
+            span {
+              font-size: 12px;
+            }
+          }
+        }
+
+        .search-input {
+          width: 160px;
+        }
+      }
+    }
+
+    // 邀请按钮区域
+    .invite-section {
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+
+      .invite-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: #f6ffed;
+        border: 1px dashed #b7eb8f;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #d9f7be;
+          border-color: #73d13d;
+        }
+
+        .invite-icon {
+          width: 32px;
+          height: 32px;
+          background: #52c41a;
+          border-radius: 50%;
           display: flex;
           align-items: center;
-          padding: 8px;
+          justify-content: center;
+          color: #fff;
+        }
+
+        .invite-text {
+          font-size: 14px;
+          color: #52c41a;
+          font-weight: 500;
+        }
+      }
+    }
+
+    // 成员列表
+    .member-scroll {
+      flex: 1;
+      background: #f5f5f5;
+
+      .member-list {
+        padding: 12px;
+
+        .member-card {
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
           background: #fff;
-          border-radius: 4px;
+          border-radius: 8px;
           margin-bottom: 8px;
           cursor: pointer;
           transition: all 0.2s;
+          border: 1px solid transparent;
 
           &:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
           }
 
-          .member-avatar {
+          .member-avatar-wrapper {
             flex-shrink: 0;
-            margin-right: 10px;
+            margin-right: 12px;
+
+            .member-avatar {
+              border-radius: 50%;
+            }
           }
 
           .member-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
 
-            .member-name {
+            .member-row {
               display: flex;
               align-items: center;
-              gap: 6px;
-              font-size: 13px;
-              color: #333;
-              margin-bottom: 2px;
+              gap: 8px;
 
-              span {
+              &.secondary {
+                font-size: 12px;
+                color: #999;
+              }
+
+              .member-name {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+              }
+
+              .admin-tag,
+              .owner-tag {
+                font-size: 10px;
+                padding: 0 4px;
+                height: 18px;
+                line-height: 16px;
+              }
+
+              .member-position,
+              .member-dept {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
               }
             }
-
-            .member-dept {
-              font-size: 11px;
-              color: #999;
-            }
           }
 
           .member-action {
             flex-shrink: 0;
+            margin-left: 12px;
           }
         }
       }
 
       .empty-state {
-        height: 200px;
+        height: 300px;
         display: flex;
         align-items: center;
         justify-content: center;
