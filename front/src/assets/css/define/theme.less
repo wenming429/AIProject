@@ -1,78 +1,314 @@
-// 默认主题 - 知信风格
-html {
-  --im-primary-color: #8B0000;
-  --im-bg-color: #ffffff;
-  --border-color: #e8e8e8;
-  --im-text-color: #333;
-  --im-text-color-grey: #999;
-  --im-active-bg-color: #f0f8ff;
-  --im-hover-bg-color: #f5f5f5;
+// ==================== 主题变量定义 ====================
 
+// 华夏红主题 (原浅色主题)
+html[theme-mode='huaxia-red'] {
+  // 主色调
+  --im-primary-color: #BF0008;
+  --im-primary-hover: #D41820;
+  --im-primary-pressed: #A00006;
+  --im-primary-light: rgba(191, 0, 8, 0.1);
+  
+  // 背景色
+  --im-bg-color: #ffffff;
+  --im-bg-secondary: #fafafa;
+  --im-bg-tertiary: #f5f5f5;
+  --im-bg-hover: #f0f0f0;
+  --im-bg-active: rgba(191, 0, 8, 0.05);
+  
+  // 文字色
+  --im-text-color: #333333;
+  --im-text-secondary: #666666;
+  --im-text-tertiary: #999999;
+  --im-text-inverse: #ffffff;
+  
+  // 边框色
+  --border-color: #e8e8e8;
+  --border-color-light: #f0f0f0;
+  
+  // 导航栏
+  --nav-bg-color: #BF0008;
+  --nav-text-color: #ffffff;
+  --nav-text-hover: rgba(255, 255, 255, 0.9);
+  --nav-icon-color: #ffffff;
+  
+  // 消息列表
+  --message-list-bg: #ffffff;
+  --message-item-bg: #ffffff;
+  --message-item-hover: #f5f5f5;
+  --message-item-active: rgba(191, 0, 8, 0.08);
+  --message-item-border: #f0f0f0;
+  --message-text-color: #333333;
+  --message-text-secondary: #999999;
+  --message-time-color: #999999;
+  
+  // 头像
+  --avatar-bg: #e8e8e8;
+  --avatar-text: #666666;
+  
+  // 角标
+  --badge-bg: #BF0008;
+  --badge-text: #ffffff;
+  
+  // 聊天对话框
+  --chat-bg: #ffffff;
+  --chat-header-bg: #ffffff;
+  --chat-header-border: #e8e8e8;
+  
+  // 消息气泡
+  --bubble-left-bg: #f5f5f5;
+  --bubble-left-text: #333333;
+  --bubble-right-bg: #BF0008;
+  --bubble-right-text: #ffffff;
+  --bubble-link-color: #BF0008;
+  
+  // 输入框
+  --input-bg: #f5f5f5;
+  --input-border: #e8e8e8;
+  --input-text: #333333;
+  --input-placeholder: #999999;
+  
+  // 按钮
+  --btn-primary-bg: #BF0008;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #f5f5f5;
+  --btn-secondary-text: #666666;
+  
+  // 组织架构
+  --org-tree-bg: #fafafa;
+  --org-tree-item-hover: #f0f0f0;
+  --org-tree-item-active: rgba(191, 0, 8, 0.08);
+  --org-tree-text: #333333;
+  --org-tree-icon: #BF0008;
+  
+  // 人员卡片
+  --card-bg: #ffffff;
+  --card-border: #e8e8e8;
+  --card-hover: #f5f5f5;
+  --card-name: #333333;
+  --card-position: #666666;
+  --card-dept: #999999;
+  
   // 滚动条
   --im-scrollbar: #e4e4e5;
   --im-scrollbar-thumb: #c0bebc;
-
-  // message
+  
+  // 旧变量兼容
+  --im-active-bg-color: rgba(191, 0, 8, 0.05);
+  --im-hover-bg-color: #f5f5f5;
   --im-message-bg-color: #f7f7f7;
   --im-message-border-color: #efeff5;
-  --im-message-left-bg-color: rgba(46, 50, 56, 0.05);
-  --im-message-left-text-color: #333;
-  --im-message-left-link-text-color: #8B0000;
-
-  --im-message-right-bg-color: #e6f7ff;
-  --im-message-right-text-color: #333;
-  --im-message-right-link-text-color: #8B0000;
-
-  --chat-assistant-bg-color: rgba(46, 50, 56, 0.05);
-  --chat-user-bg-color: #e6f7ff;
-  --chat-bg-grey-color: rgba(46, 50, 56, 0.05);
-
-  --note-list-active-bg-color: #e5e6eb;
+  --im-message-left-bg-color: #f5f5f5;
+  --im-message-left-text-color: #333333;
+  --im-message-left-link-text-color: #BF0008;
+  --im-message-right-bg-color: #BF0008;
+  --im-message-right-text-color: #ffffff;
+  --im-message-right-link-text-color: #BF0008;
+  --chat-assistant-bg-color: #f5f5f5;
+  --chat-user-bg-color: #BF0008;
+  --chat-bg-grey-color: #f5f5f5;
+  --note-list-active-bg-color: rgba(191, 0, 8, 0.08);
 }
 
-// 黑色主题
-html[theme-mode='dark'] {
-  --im-primary-color: #1890ff;
-  --im-bg-color: #0a0a0a;
-  --border-color: rgb(245 245 240 / 10%);
-  --im-text-color: rgba(255, 255, 255, 0.82);
-  --im-text-color-grey: rgba(255, 255, 255, 0.52);
-  --im-active-bg-color: #2c2c32;
-  --im-hover-bg-color: #2c2c32;
-
+// 浅灰主题 (新主题)
+html[theme-mode='light-gray'] {
+  // 主色调
+  --im-primary-color: #5B6B79;
+  --im-primary-hover: #6B7B89;
+  --im-primary-pressed: #4B5B69;
+  --im-primary-light: rgba(91, 107, 121, 0.1);
+  
+  // 背景色
+  --im-bg-color: #F8F9FA;
+  --im-bg-secondary: #ffffff;
+  --im-bg-tertiary: #F1F3F4;
+  --im-bg-hover: #E8EAED;
+  --im-bg-active: rgba(91, 107, 121, 0.08);
+  
+  // 文字色
+  --im-text-color: #1a1a2e;
+  --im-text-secondary: #4a5568;
+  --im-text-tertiary: #718096;
+  --im-text-inverse: #ffffff;
+  
+  // 边框色
+  --border-color: #E2E8F0;
+  --border-color-light: #EDF2F7;
+  
+  // 导航栏 - 浅灰风格
+  --nav-bg-color: #F8F9FA;
+  --nav-text-color: #4a5568;
+  --nav-text-hover: #1a1a2e;
+  --nav-icon-color: #5B6B79;
+  
+  // 消息列表
+  --message-list-bg: #ffffff;
+  --message-item-bg: #ffffff;
+  --message-item-hover: #F8F9FA;
+  --message-item-active: rgba(91, 107, 121, 0.08);
+  --message-item-border: #EDF2F7;
+  --message-text-color: #1a1a2e;
+  --message-text-secondary: #718096;
+  --message-time-color: #A0AEC0;
+  
+  // 头像
+  --avatar-bg: #E2E8F0;
+  --avatar-text: #5B6B79;
+  
+  // 角标
+  --badge-bg: #5B6B79;
+  --badge-text: #ffffff;
+  
+  // 聊天对话框
+  --chat-bg: #F8F9FA;
+  --chat-header-bg: #ffffff;
+  --chat-header-border: #E2E8F0;
+  
+  // 消息气泡
+  --bubble-left-bg: #ffffff;
+  --bubble-left-text: #1a1a2e;
+  --bubble-right-bg: #5B6B79;
+  --bubble-right-text: #ffffff;
+  --bubble-link-color: #5B6B79;
+  
+  // 输入框
+  --input-bg: #ffffff;
+  --input-border: #E2E8F0;
+  --input-text: #1a1a2e;
+  --input-placeholder: #A0AEC0;
+  
+  // 按钮
+  --btn-primary-bg: #5B6B79;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #EDF2F7;
+  --btn-secondary-text: #4a5568;
+  
+  // 组织架构
+  --org-tree-bg: #F8F9FA;
+  --org-tree-item-hover: #EDF2F7;
+  --org-tree-item-active: rgba(91, 107, 121, 0.1);
+  --org-tree-text: #1a1a2e;
+  --org-tree-icon: #5B6B79;
+  
+  // 人员卡片
+  --card-bg: #ffffff;
+  --card-border: #E2E8F0;
+  --card-hover: #F8F9FA;
+  --card-name: #1a1a2e;
+  --card-position: #4a5568;
+  --card-dept: #718096;
+  
   // 滚动条
-  --im-scrollbar: transparent;
-  --im-scrollbar-thumb: #707073;
+  --im-scrollbar: #E2E8F0;
+  --im-scrollbar-thumb: #CBD5E0;
+  
+  // 旧变量兼容
+  --im-active-bg-color: rgba(91, 107, 121, 0.08);
+  --im-hover-bg-color: #F8F9FA;
+  --im-message-bg-color: #F1F3F4;
+  --im-message-border-color: #E2E8F0;
+  --im-message-left-bg-color: #ffffff;
+  --im-message-left-text-color: #1a1a2e;
+  --im-message-left-link-text-color: #5B6B79;
+  --im-message-right-bg-color: #5B6B79;
+  --im-message-right-text-color: #ffffff;
+  --im-message-right-link-text-color: #5B6B79;
+  --chat-assistant-bg-color: #ffffff;
+  --chat-user-bg-color: #5B6B79;
+  --chat-bg-grey-color: #ffffff;
+  --note-list-active-bg-color: rgba(91, 107, 121, 0.08);
+}
 
-  // message
-  --im-message-bg-color: #363636;
-  --im-message-border-color: rgba(255, 255, 255, 0.09);
-  --im-message-left-bg-color: #474747;
-  --im-message-left-text-color: var(--im-text-color);
-  --im-message-left-link-text-color: #1890ff;
-
-  --im-message-right-bg-color: rgb(84 169 255);
-  --im-message-right-text-color: #e4e7f5;
-  --im-message-right-link-text-color: #1890ff;
-
-  --chat-assistant-bg-color: rgba(255, 255, 255, 0.12);
-  --chat-user-bg-color: rgba(255, 255, 255, 0.12);
-  --chat-bg-grey-color: rgba(255, 255, 255, 0.12);
-
-  --note-list-active-bg-color: rgba(255, 255, 255, 0.1);
-
-  ::selection {
-    background: #d3d3d3;
-    color: #555;
-  }
-  ::-moz-selection {
-    background: #d3d3d3;
-    color: #555;
-  }
-  ::-webkit-selection {
-    background: #d3d3d3;
-    color: #555;
-  }
+// 默认主题 (华夏红)
+html {
+  --im-primary-color: #BF0008;
+  --im-primary-hover: #D41820;
+  --im-primary-pressed: #A00006;
+  --im-primary-light: rgba(191, 0, 8, 0.1);
+  
+  --im-bg-color: #ffffff;
+  --im-bg-secondary: #fafafa;
+  --im-bg-tertiary: #f5f5f5;
+  --im-bg-hover: #f0f0f0;
+  --im-bg-active: rgba(191, 0, 8, 0.05);
+  
+  --im-text-color: #333333;
+  --im-text-secondary: #666666;
+  --im-text-tertiary: #999999;
+  --im-text-inverse: #ffffff;
+  
+  --border-color: #e8e8e8;
+  --border-color-light: #f0f0f0;
+  
+  --nav-bg-color: #BF0008;
+  --nav-text-color: #ffffff;
+  --nav-text-hover: rgba(255, 255, 255, 0.9);
+  --nav-icon-color: #ffffff;
+  
+  --message-list-bg: #ffffff;
+  --message-item-bg: #ffffff;
+  --message-item-hover: #f5f5f5;
+  --message-item-active: rgba(191, 0, 8, 0.08);
+  --message-item-border: #f0f0f0;
+  --message-text-color: #333333;
+  --message-text-secondary: #999999;
+  --message-time-color: #999999;
+  
+  --avatar-bg: #e8e8e8;
+  --avatar-text: #666666;
+  
+  --badge-bg: #BF0008;
+  --badge-text: #ffffff;
+  
+  --chat-bg: #ffffff;
+  --chat-header-bg: #ffffff;
+  --chat-header-border: #e8e8e8;
+  
+  --bubble-left-bg: #f5f5f5;
+  --bubble-left-text: #333333;
+  --bubble-right-bg: #BF0008;
+  --bubble-right-text: #ffffff;
+  --bubble-link-color: #BF0008;
+  
+  --input-bg: #f5f5f5;
+  --input-border: #e8e8e8;
+  --input-text: #333333;
+  --input-placeholder: #999999;
+  
+  --btn-primary-bg: #BF0008;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #f5f5f5;
+  --btn-secondary-text: #666666;
+  
+  --org-tree-bg: #fafafa;
+  --org-tree-item-hover: #f0f0f0;
+  --org-tree-item-active: rgba(191, 0, 8, 0.08);
+  --org-tree-text: #333333;
+  --org-tree-icon: #BF0008;
+  
+  --card-bg: #ffffff;
+  --card-border: #e8e8e8;
+  --card-hover: #f5f5f5;
+  --card-name: #333333;
+  --card-position: #666666;
+  --card-dept: #999999;
+  
+  --im-scrollbar: #e4e4e5;
+  --im-scrollbar-thumb: #c0bebc;
+  
+  --im-active-bg-color: rgba(191, 0, 8, 0.05);
+  --im-hover-bg-color: #f5f5f5;
+  --im-message-bg-color: #f7f7f7;
+  --im-message-border-color: #efeff5;
+  --im-message-left-bg-color: #f5f5f5;
+  --im-message-left-text-color: #333333;
+  --im-message-left-link-text-color: #BF0008;
+  --im-message-right-bg-color: #BF0008;
+  --im-message-right-text-color: #ffffff;
+  --im-message-right-link-text-color: #BF0008;
+  --chat-assistant-bg-color: #f5f5f5;
+  --chat-user-bg-color: #BF0008;
+  --chat-bg-grey-color: #f5f5f5;
+  --note-list-active-bg-color: rgba(191, 0, 8, 0.08);
 }
 
 body {
@@ -84,7 +320,7 @@ body {
   --md-scrollbar-thumb-color: transparent !important;
 
   &:hover {
-    --md-scrollbar-thumb-color: #c0bebc !important;
+    --md-scrollbar-thumb-color: var(--im-scrollbar-thumb) !important;
   }
 }
 

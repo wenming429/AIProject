@@ -1,10 +1,12 @@
 <script setup>
 import { useNoteStore } from '@/store'
+import { useThemeMode } from '@/hooks'
 import { CalendarThirty, DeleteThemes, DocAdd, FolderFocus, Right } from '@icon-park/vue-next'
 import NoteMenuClass from './NoteMenuClass.vue'
 import RecycleModal from './RecycleModal.vue'
 
 const store = useNoteStore()
+const { currentTheme } = useThemeMode()
 
 const isShowRecycleModal = ref(false)
 
@@ -20,7 +22,10 @@ onInit()
 </script>
 
 <template>
-  <section class="el-container is-vertical section h-full w-full">
+  <section 
+    class="el-container is-vertical section h-full w-full"
+    :style="{ '--border-color': currentTheme.border }"
+  >
     <header class="el-header menu-header">
       <n-button ghost round @click="() => store.addNewNote(getCalssId())" block>
         <template #icon>

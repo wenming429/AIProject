@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { textReplaceEmoji } from '@/utils/emojis'
 import { textReplaceLink, textReplaceMention } from '@/utils/string'
+import { useThemeMode } from '@/hooks'
+
+const { currentTheme } = useThemeMode()
 
 const props = defineProps<{
   content: string
@@ -20,6 +23,13 @@ textContent = textReplaceMention(textContent)
     :class="{
       user: role === 'user'
     }"
+    :style="{
+      '--bubble-left-bg': currentTheme.bubbleLeftBg,
+      '--bubble-left-text': currentTheme.bubbleLeftText,
+      '--bubble-right-bg': currentTheme.bubbleRightBg,
+      '--bubble-right-text': currentTheme.bubbleRightText,
+      '--bubble-link': currentTheme.bubbleLink
+    }"
   >
     <pre v-html="textContent" />
   </div>
@@ -29,12 +39,22 @@ textContent = textReplaceMention(textContent)
 .immsg-text {
   min-width: 30px;
   min-height: 30px;
-  padding: 3px;
-  border-radius: 5px;
-  background: var(--chat-assistant-bg-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bubble-left-bg);
+  color: var(--bubble-left-text);
+  transition: all 0.3s;
 
   &.user {
-    background: var(--chat-user-bg-color);
+    background: var(--bubble-right-bg);
+    color: var(--bubble-right-text);
+
+    pre {
+      :deep(a) {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: underline;
+      }
+    }
   }
 
   pre {
@@ -42,8 +62,7 @@ textContent = textReplaceMention(textContent)
     overflow: hidden;
     word-break: break-word;
     word-wrap: break-word;
-    font-size: 13px;
-    padding: 3px 5px;
+    font-size: 14px;
     font-family:
       system,
       -apple-system,
@@ -64,7 +83,8 @@ textContent = textReplaceMention(textContent)
       Helvetica,
       Arial,
       sans-serif;
-    line-height: 1.8;
+    line-height: 1.6;
+    margin: 0;
 
     :deep(.emoji) {
       vertical-align: text-bottom;
@@ -72,7 +92,7 @@ textContent = textReplaceMention(textContent)
     }
 
     :deep(a) {
-      color: var(--im-primary-color);
+      color: var(--bubble-link);
       text-decoration: revert;
     }
   }

@@ -8,15 +8,18 @@ import {
 } from '@/apis/api'
 import { fetchApi } from '@/apis/request'
 import { ContactConst } from '@/constant/event-bus.ts'
-import { useInject } from '@/hooks'
-import { useTalkStore } from '@/store'
+import { useInject, useThemeMode } from '@/hooks'
+import { useSettingsStore, useTalkStore } from '@/store'
 import { bus } from '@/utils'
 import { formatPhone } from '@/utils/string'
 import { CloseOne, Female, Male, SendOne } from '@icon-park/vue-next'
+import { computed } from 'vue'
 
 const { message } = useInject()
 const router = useRouter()
 const talkStore = useTalkStore()
+const { currentTheme } = useThemeMode()
+const settingsStore = useSettingsStore()
 
 const emit = defineEmits(['close'])
 
@@ -64,6 +67,31 @@ const groupName = computed(() => {
 
   return item?.label || '-'
 })
+
+// 卡片背景样式 - 使用主题色或自定义名片主题色
+const cardBackground = computed(() => {
+  // 优先使用用户设置的名片主题色
+  if (settingsStore.useCustomCardTheme && settingsStore.cardThemeGradient) {
+    return settingsStore.cardThemeGradient
+  }
+  // 否则使用当前主题色
+  return `linear-gradient(135deg, ${currentTheme.value.primary} 0%, ${lightenColor(currentTheme.value.primary, 20)} 100%)`
+})
+
+//  lighten color helper
+const lightenColor = (color: string, percent: number): string => {
+  const num = parseInt(color.replace('#', ''), 16)
+  const amt = Math.round(2.55 * percent)
+  const R = (num >> 16) + amt
+  const G = ((num >> 8) & 0x00ff) + amt
+  const B = (num & 0x0000ff) + amt
+  return '#' + (
+    0x1000000 +
+    (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+    (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+    (B < 255 ? (B < 1 ? 0 : B) : 255)
+  ).toString(16).slice(1)
+}
 
 const onLoadUser = async () => {
   const [err, data] = await fetchApi(fetchContactDetail, { user_id: props.userId }, { loading })
@@ -180,7 +208,10 @@ onLoadUserGroup()
 <template>
   <div class="section">
     <section class="section el-container is-vertical h-full">
-      <header class="el-header header">
+      <header 
+        class="el-header header" 
+        :style="{ background: cardBackground }"
+      >
         <im-avatar
           class="avatar"
           :size="60"
@@ -330,40 +361,52 @@ onLoadUserGroup()
   overflow: hidden;
   background-color: var(--im-bg-color);
   border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 
   .header {
     width: 100%;
     height: 160px;
     align-items: center;
     justify-content: center;
-    background: #0084ff;
     display: flex;
     padding: 20px;
     position: relative;
     overflow: hidden;
+    transition: background 0.5s ease;
 
+    // 装饰性圆形图案 - 主题色相关
     &::before {
-      width: 150px;
-      height: 150px;
+      width: 180px;
+      height: 180px;
       content: '';
-      background: linear-gradient(to right, #1890ff, #0084ff);
+      background: linear-gradient(to right, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
       position: absolute;
       z-index: 1;
       border-radius: 50%;
-      right: -25%;
-      top: -25%;
+      right: -30%;
+      top: -30%;
+      animation: float 6s ease-in-out infinite;
     }
 
     &::after {
-      width: 150px;
-      height: 150px;
+      width: 140px;
+      height: 140px;
       content: '';
-      background: linear-gradient(to left, #1890ff, #0084ff);
+      background: linear-gradient(to left, rgba(255,255,255,0.15), rgba(255,255,255,0.02));
       position: absolute;
       z-index: 1;
       border-radius: 50%;
-      left: -25%;
+      left: -20%;
       bottom: -20%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+
+    // 额外的装饰元素
+    .decoration-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
     }
 
     .nickname {
@@ -376,6 +419,8 @@ onLoadUserGroup()
       text-align: center;
       color: #ffffff;
       font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      z-index: 2;
     }
 
     .gender {
@@ -388,16 +433,41 @@ onLoadUserGroup()
       align-items: center;
       justify-content: center;
       border-radius: 50%;
+      z-index: 2;
     }
 
     .close {
       position: absolute;
-      right: 20px;
-      top: 20px;
-      z-index: 1;
+      right: 15px;
+      top: 15px;
+      z-index: 10;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      transition: all 0.3s ease;
+      
       &:hover {
         cursor: pointer;
+        background: rgba(255, 255, 255, 0.25);
         transform: scale(1.1);
+      }
+    }
+
+    .avatar {
+      z-index: 2;
+      
+      :deep(.avatar-container) {
+        padding: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        
+        .avatar-inner {
+          border: 2px solid #ffffff;
+        }
       }
     }
   }
@@ -409,10 +479,10 @@ onLoadUserGroup()
 
     .motto {
       min-height: 26px;
-      border-radius: 5px;
-      padding: 5px 8px;
-      line-height: 25px;
-      background: #f3f5f7;
+      border-radius: 8px;
+      padding: 10px 12px;
+      line-height: 22px;
+      background: var(--im-bg-secondary, #f3f5f7);
       color: var(--im-text-color);
       font-size: 12px;
       margin-bottom: 20px;
@@ -421,6 +491,11 @@ onLoadUserGroup()
       -webkit-line-clamp: 2;
       position: relative;
       overflow: hidden;
+      transition: all 0.3s;
+      
+      &:hover {
+        background: var(--im-hover-bg-color, #e8e8e8);
+      }
     }
   }
 
@@ -430,11 +505,21 @@ onLoadUserGroup()
   }
 }
 
+// 浮动动画
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-10px, -10px) scale(1.05);
+  }
+}
+
 .infos {
   .info-item {
-    height: 30px;
+    height: 32px;
     width: 100%;
-    margin: 3px 0;
+    margin: 4px 0;
     display: flex;
     align-items: center;
 
@@ -442,41 +527,40 @@ onLoadUserGroup()
       width: 45px;
       flex-shrink: 0;
       font-size: 14px;
+      color: var(--im-text-secondary);
     }
 
     .text {
       flex: 1 auto;
       margin-left: 5px;
       font-size: 13px;
+      color: var(--im-text-color);
     }
   }
 }
 
-html[theme-mode='dark'] {
-  .section {
-    .header {
-      background: #2c2c32;
-
-      &::before {
-        background: rgb(254 254 254 / 4%) !important;
-      }
-
-      &::after {
-        background: rgb(254 254 254 / 4%) !important;
-      }
-    }
-
-    .motto {
-      background-color: rgb(44, 44, 50);
+// 主题适配
+html[theme-mode='huaxia-red'] {
+  .section .header {
+    .decoration-circle {
+      background: rgba(255, 255, 255, 0.12);
     }
   }
+}
 
-  .infos {
-    .info-item {
-      .name {
-        color: #afabab;
-      }
+html[theme-mode='light-gray'] {
+  .section .header {
+    .decoration-circle {
+      background: rgba(255, 255, 255, 0.15);
     }
+  }
+}
+
+// 响应式适配
+@media (max-width: 480px) {
+  .section {
+    width: 100%;
+    max-width: 330px;
   }
 }
 </style>

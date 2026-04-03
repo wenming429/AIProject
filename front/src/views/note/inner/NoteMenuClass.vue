@@ -94,15 +94,16 @@ loadWatchClassMenu()
       </div>
 
       <VueDraggable ref="el" v-model="items" @end="onDragEnd">
-        <div
-          class="category-submenu-item"
-          v-for="item in items"
-          :class="{
-            actived: store.notes.params.find_type == 3 && store.notes.params.classify_id == item.id
-          }"
-          :key="item.id"
-          @click="store.setParams({ find_type: 3, classify_id: item.id })"
-        >
+        <template v-for="(item, index) in items" :key="item.id">
+          <!-- 分割线 -->
+          <div v-if="index > 0" class="category-divider"></div>
+          <div
+            class="category-submenu-item"
+            :class="{
+              actived: store.notes.params.find_type == 3 && store.notes.params.classify_id == item.id
+            }"
+            @click="store.setParams({ find_type: 3, classify_id: item.id })"
+          >
           <template v-if="item.is_edit">
             <input
               class="category-input"
@@ -126,6 +127,7 @@ loadWatchClassMenu()
             <div class="more-num">{{ item.count > 0 ? item.count : '' }}</div>
           </template>
         </div>
+        </template>
       </VueDraggable>
     </div>
   </section>
@@ -147,6 +149,34 @@ loadWatchClassMenu()
   .category-submenu {
     margin: 3px 0px;
     padding: 0 15px;
+
+    // 分割线
+    .category-divider {
+      height: 1px;
+      background: var(--border-color, #e0e0e0);
+      margin: 6px 0;
+      position: relative;
+      
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 15px;
+        background: transparent;
+      }
+      
+      &::before {
+        left: 0;
+        background: linear-gradient(to right, transparent, var(--border-color, #e0e0e0));
+      }
+      
+      &::after {
+        right: 0;
+        background: linear-gradient(to left, transparent, var(--border-color, #e0e0e0));
+      }
+    }
 
     .category-input {
       width: 100%;

@@ -3,16 +3,21 @@ import { useSettingsStore, useTalkStore, useUserStore } from '@/store'
 import { GithubOne, Message, NotebookOne, People, SettingTwo } from '@icon-park/vue-next'
 import AccountCard from './AccountCard.vue'
 import { NModal } from 'naive-ui'
+import { useThemeMode } from '@/hooks'
 
 const userStore = useUserStore()
 const talkStore = useTalkStore()
 const router = useRouter()
-
 const settingsStore = useSettingsStore()
+const { currentTheme } = useThemeMode()
 
-const color = computed(() => {
-  return '#ffffff'
-})
+// 根据主题获取图标颜色
+const getIconColor = (isActive: boolean) => {
+  if (isActive) {
+    return currentTheme.value.primary
+  }
+  return currentTheme.value.navText
+}
 
 const menus = reactive([
   {
@@ -79,7 +84,7 @@ const isActive = (menu) => {
 </script>
 
 <template>
-  <section class="menu">
+  <section class="menu" :style="{ backgroundColor: currentTheme.navBg }">
     <header class="menu-header" :url="router.currentRoute.value.path">
       <n-popover
         placement="right"
@@ -90,15 +95,18 @@ const isActive = (menu) => {
         <template #trigger>
           <im-avatar
             class="logo"
-            :size="35"
+            :size="38"
             :src="userStore.avatar"
             :username="userStore.nickname"
+            :square="true"
+            :online="userStore.online"
+            :showOnline="true"
           />
         </template>
         <AccountCard />
       </n-popover>
 
-      <span class="online-status" :class="{ online: userStore.online }">
+      <span class="online-text" :class="{ online: userStore.online }" :style="{ color: currentTheme.navText }">
         {{ userStore.online ? '在线' : '连接中...' }}
       </span>
     </header>
@@ -111,32 +119,39 @@ const isActive = (menu) => {
           'menu-items': true,
           active: isActive(nav)
         }"
+        :style="{
+          color: currentTheme.navText,
+          '--nav-text': currentTheme.navText,
+          '--nav-hover-bg': currentTheme.navTextHover,
+          '--nav-active-bg': currentTheme.primaryLight,
+          '--nav-active-indicator': currentTheme.primary
+        }"
         @click="onClickMenu(nav)"
       >
         <!-- 消息提示 -->
-        <div class="hotspot" v-if="nav.hotspot" />
+        <div class="hotspot" v-if="nav.hotspot" :style="{ background: currentTheme.badgeBg }" />
 
         <div>
           <component
             :is="nav.icon"
             theme="outline"
-            :fill="isActive(nav) ? '#5FA8D3' : '#ffffff'"
+            :fill="isActive(nav) ? currentTheme.primary : currentTheme.navIcon"
             :strokeWidth="2"
             :size="24"
           />
         </div>
 
-        <span>{{ nav.title }}</span>
+        <span :style="{ color: currentTheme.navText }">{{ nav.title }}</span>
       </div>
     </main>
 
     <footer class="menu-footer">
       <div>
         <a class="pointer" href="https://github.com/gzydong/LumenIM" target="_blank">
-          <github-one theme="outline" size="22" fill="#ffffff" :strokeWidth="2" />
+          <github-one theme="outline" size="22" :fill="currentTheme.navIcon" :strokeWidth="2" />
         </a>
       </div>
-      <div @click="onShowLogoutMenu" class="pointer" style="color: #ffffff;">退出</div>
+      <div @click="onShowLogoutMenu" class="pointer" :style="{ color: currentTheme.navText }">退出</div>
     </footer>
 
     <!-- 退出菜单弹窗 -->
@@ -163,26 +178,42 @@ const isActive = (menu) => {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  transition: background-color 0.3s;
 
-  .menu-header {
-    height: 90px;
+    .menu-header {
+    height: 95px;
     width: 100%;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     flex-direction: column;
-    padding-top: 18px;
+    padding-top: 15px;
     box-sizing: border-box;
     cursor: pointer;
 
-    .online-status {
-      margin-top: 5px;
-      font-size: 13px;
-      font-weight: 300;
-      color: rgba(255, 255, 255, 0.7);
+    .logo {
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.08);
+      }
+    }
+
+    .online-text {
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.8;
+      transition: all 0.3s;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(128, 128, 128, 0.15);
 
       &.online {
-        color: #65c468;
+        color: #52c41a !important;
+        opacity: 1;
+        background: rgba(82, 196, 26, 0.15);
+        font-weight: 500;
       }
     }
   }
@@ -202,10 +233,10 @@ const isActive = (menu) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
+      transition: all 0.2s;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(128, 128, 128, 0.1);
       }
     }
   }
@@ -224,15 +255,14 @@ const isActive = (menu) => {
   height: 50px;
   margin: 5px auto;
   border-radius: 8px;
-  color: #ffffff;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(128, 128, 128, 0.1);
   }
 
   &.active {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--nav-active-bg);
 
     &::before {
       content: '';
@@ -242,20 +272,18 @@ const isActive = (menu) => {
       transform: translateY(-50%);
       width: 3px;
       height: 20px;
-      background: #5FA8D3;
+      background: var(--nav-active-indicator);
       border-radius: 0 2px 2px 0;
     }
   }
 
   span {
-    color: #ffffff;
+    transition: color 0.3s;
   }
 
   .hotspot {
     width: 5px;
     height: 5px;
-    --hotspot: #ff1e1e;
-    background: var(--hotspot);
     display: inline-block;
     border-radius: 5px;
     position: absolute;
@@ -269,45 +297,45 @@ const isActive = (menu) => {
 
 @keyframes notifymove {
   0% {
-    background: var(--hotspot);
+    opacity: 1;
   }
 
   25% {
-    background: transparent;
+    opacity: 0.3;
   }
 
   50% {
-    background: var(--hotspot);
+    opacity: 1;
   }
 
   75% {
-    background: transparent;
+    opacity: 0.3;
   }
 
   100% {
-    background: var(--hotspot);
+    opacity: 1;
   }
 }
 
 @-webkit-keyframes notifymove {
   0% {
-    background: #ff1e1e;
+    opacity: 1;
   }
 
   25% {
-    background: transparent;
+    opacity: 0.3;
   }
 
   50% {
-    background: #ff1e1e;
+    opacity: 1;
   }
 
   75% {
-    background: transparent;
+    opacity: 0.3;
   }
 
   100% {
-    background: #ff1e1e;
+    opacity: 1;
   }
 }
 
@@ -349,6 +377,6 @@ const isActive = (menu) => {
 
 .logout-divider {
   height: 1px;
-  background: var(--im-border-color);
+  background: var(--border-color);
 }
 </style>

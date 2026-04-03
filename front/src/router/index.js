@@ -11,14 +11,8 @@ const routes = [
     path: '/',
     name: 'home',
     meta: { auth: true },
-    component: () => import('@/views/embed/index.vue')
-  },
-  {
-    path: '/main',
-    name: 'main',
-    meta: { auth: true },
     component: MainLayout,
-    redirect: '/main/message',
+    redirect: '/message',
     children: [
       {
         path: 'message',
@@ -42,6 +36,7 @@ const routes = [
       ContactRouter
     ]
   },
+
   {
     path: '/embed',
     name: 'embed',

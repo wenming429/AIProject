@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import { Announcement, MenuFoldOne, MenuUnfoldOne, More, PeoplePlusOne } from '@icon-park/vue-next'
+import { useThemeMode } from '@/hooks'
+
+const { currentTheme } = useThemeMode()
 
 const emit = defineEmits(['evnet', 'changeSessionMenu'])
 
@@ -40,7 +43,18 @@ const onSetMenu = () => {
 </script>
 
 <template>
-  <header class="el-header panel-header">
+  <header 
+    class="el-header panel-header"
+    :style="{
+      '--header-bg': currentTheme.chatHeaderBg,
+      '--header-border': currentTheme.chatHeaderBorder,
+      '--text-primary': currentTheme.textPrimary,
+      '--text-secondary': currentTheme.textSecondary,
+      '--primary-color': currentTheme.primary,
+      '--tag-group': currentTheme.primary,
+      '--tag-friend': '#f97348'
+    }"
+  >
     <div class="menu border-right pointer" @click="onSetMenu">
       <n-icon :component="menu ? MenuUnfoldOne : MenuFoldOne" :size="22" />
     </div>
@@ -70,32 +84,6 @@ const onSetMenu = () => {
         </template>
         群公告
       </n-popover>
-
-      <!-- <n-popover trigger="hover">
-        <template #trigger>
-          <n-icon
-            class="icon"
-            v-show="talkMode == 1"
-            :component="PhoneVideoCall"
-            :size="18"
-            @click="emit('evnet', 'phone_video_call')"
-          />
-        </template>
-        语音通话
-      </n-popover>
-
-      <n-popover trigger="hover">
-        <template #trigger>
-          <n-icon
-            class="icon"
-            v-show="talkMode == 1"
-            :component="VideoOne"
-            :size="18"
-            @click="emit('evnet', 'facetime')"
-          />
-        </template>
-        视频通话
-      </n-popover> -->
 
       <n-popover trigger="hover">
         <template #trigger>
@@ -135,6 +123,9 @@ const onSetMenu = () => {
   box-sizing: border-box;
   -webkit-app-region: drag;
   position: relative;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  transition: all 0.3s;
 
   .menu {
     width: 50px;
@@ -143,6 +134,12 @@ const onSetMenu = () => {
     align-items: center;
     left: 0;
     justify-content: center;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+
+    &:hover {
+      color: var(--primary-color);
+    }
   }
 
   .module {
@@ -157,6 +154,13 @@ const onSetMenu = () => {
     position: relative;
     flex: 1 auto;
 
+    .nickname {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 15px;
+      transition: color 0.3s;
+    }
+
     .opacity {
       opacity: 0.7;
     }
@@ -166,6 +170,7 @@ const onSetMenu = () => {
       -webkit-animation: inputfade 1s infinite;
       margin-left: 5px;
       font-size: 12px;
+      color: var(--primary-color);
     }
 
     .desc {
@@ -174,7 +179,8 @@ const onSetMenu = () => {
       bottom: 0;
       width: 80%;
       font-size: 12px;
-      opacity: 0.5;
+      color: var(--text-secondary);
+      opacity: 0.7;
       transform: scale(0.9);
       transform-origin: left;
     }
@@ -188,6 +194,13 @@ const onSetMenu = () => {
     .icon {
       cursor: pointer;
       margin: 0 8px;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+
+      &:hover {
+        color: var(--primary-color);
+        transform: scale(1.1);
+      }
     }
   }
 }
@@ -222,17 +235,22 @@ const onSetMenu = () => {
 }
 
 .tag {
-  background: rgb(81 139 254);
   height: 18px;
   line-height: 18px;
   padding: 1px 5px;
   font-size: 10px;
   color: white;
-  border-radius: 2px;
+  border-radius: 3px;
   margin-right: 8px;
   flex-shrink: 0;
+  font-weight: 500;
+
+  &:not(.red) {
+    background: var(--tag-group);
+  }
+
   &.red {
-    background: #f97348;
+    background: var(--tag-friend);
   }
 }
 </style>

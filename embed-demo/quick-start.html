@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumenIM 快速集成示例 - 一行代码嵌入</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #f5f7fa;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      color: #333;
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+    
+    .demo-section {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .demo-section h2 {
+      color: #333;
+      font-size: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .demo-section h2 .badge {
+      background: #52c41a;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+    
+    .highlight { color: #ce9178; }
+    .keyword { color: #569cd6; }
+    .function { color: #dcdcaa; }
+    .comment { color: #6a9955; }
+    
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+    }
+    
+    .steps li {
+      position: relative;
+      padding-left: 50px;
+      margin-bottom: 20px;
+      padding-top: 5px;
+    }
+    
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #BF0008 0%, #D4000A 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+    
+    .api-table th,
+    .api-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    
+    .api-table th {
+      background: #f5f5f5;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .api-table code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #d73a49;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-right: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #BF0008 0%, #D4000A 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .oa-simulator {
+      background: linear-gradient(135deg, #1a5fb4 0%, #3584e4 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .oa-simulator h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+    }
+    
+    .oa-content {
+      background: rgba(255,255,255,0.1);
+      padding: 40px;
+      border-radius: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🚀 LumenIM 快速集成</h1>
+    <p>只需几行代码，即可将即时通讯功能嵌入到您的OA/CRM系统中</p>
+  </div>
+
+  <!-- 快速开始 -->
+  <div class="demo-section">
+    <h2>⚡ 快速开始 <span class="badge">推荐</span></h2>
+    <p>在您的网页中添加以下代码，即可嵌入聊天窗口：</p>
+    
+    <div class="code-block">
+<pre><span class="comment">&lt;!-- 1. 引入 SDK --&gt;</span>
+&lt;<span class="keyword">script</span> <span class="highlight">src</span>=<span class="highlight">"lumenim-embed-sdk.js"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+
+&lt;<span class="keyword">script</span>&gt;
+<span class="comment">// 2. 初始化（一行代码）</span>
+<span class="keyword">const</span> <span class="function">chat</span> = <span class="keyword">new</span> <span class="function">LumenIMEmbed</span>({
+  <span class="highlight">serverUrl</span>: <span class="highlight">'https://im.yourcompany.com'</span>,
+  <span class="highlight">theme</span>: <span class="highlight">'light-gray'</span>  <span class="comment">// 或 'china-red'</span>
+});
+&lt;/<span class="keyword">script</span>&gt;</pre>
+    </div>
+    
+    <button class="btn btn-primary" onclick="chat.open()">
+      <span>💬</span> 打开聊天窗口
+    </button>
+    <button class="btn btn-secondary" onclick="chat.switchToContact()">
+      <span>👥</span> 查看通讯录
+    </button>
+  </div>
+
+  <!-- 集成步骤 -->
+  <div class="demo-section">
+    <h2>📋 集成步骤</h2>
+    <ul class="steps">
+      <li>
+        <strong>下载 SDK</strong><br>
+        将 <code>lumenim-embed-sdk.js</code> 文件复制到您的项目中
+      </li>
+      <li>
+        <strong>引入 SDK</strong><br>
+        在需要集成聊天的页面中添加 SDK 引用
+      </li>
+      <li>
+        <strong>初始化配置</strong><br>
+        配置服务器地址、主题颜色等参数
+      </li>
+      <li>
+        <strong>完成！</strong><br>
+        右下角自动显示悬浮按钮，点击即可使用
+      </li>
+    </ul>
+  </div>
+
+  <!-- 配置选项 -->
+  <div class="demo-section">
+    <h2>⚙️ 配置选项</h2>
+    <table class="api-table">
+      <tr>
+        <th>参数</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+      </tr>
+      <tr>
+        <td><code>serverUrl</code></td>
+        <td>string</td>
+        <td>-</td>
+        <td>LumenIM 服务地址（必填）</td>
+      </tr>
+      <tr>
+        <td><code>theme</code></td>
+        <td>string</td>
+        <td>'light-gray'</td>
+        <td>主题：'light-gray' 或 'china-red'</td>
+      </tr>
+      <tr>
+        <td><code>position</code></td>
+        <td>object</td>
+        <td>{bottom:30, right:30}</td>
+        <td>悬浮按钮位置</td>
+      </tr>
+      <tr>
+        <td><code>size</code></td>
+        <td>object</td>
+        <td>{width:900, height:600}</td>
+        <td>窗口尺寸</td>
+      </tr>
+      <tr>
+        <td><code>draggable</code></td>
+        <td>boolean</td>
+        <td>true</td>
+        <td>是否允许拖拽窗口</td>
+      </tr>
+      <tr>
+        <td><code>resizable</code></td>
+        <td>boolean</td>
+        <td>true</td>
+        <td>是否允许调整窗口大小</td>
+      </tr>
+      <tr>
+        <td><code>authToken</code></td>
+        <td>string</td>
+        <td>null</td>
+        <td>自动登录Token（可选）</td>
+      </tr>
+      <tr>
+        <td><code>debug</code></td>
+        <td>boolean</td>
+        <td>false</td>
+        <td>调试模式</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- API 方法 -->
+  <div class="demo-section">
+    <h2>🔌 API 方法</h2>
+    <table class="api-table">
+      <tr>
+        <th>方法</th>
+        <th>参数</th>
+        <th>说明</th>
+      </tr>
+      <tr>
+        <td><code>open()</code></td>
+        <td>-</td>
+        <td>打开聊天窗口</td>
+      </tr>
+      <tr>
+        <td><code>close()</code></td>
+        <td>-</td>
+        <td>关闭聊天窗口</td>
+      </tr>
+      <tr>
+        <td><code>minimize()</code></td>
+        <td>-</td>
+        <td>最小化窗口</td>
+      </tr>
+      <tr>
+        <td><code>switchToMessage()</code></td>
+        <td>-</td>
+        <td>切换到消息页面</td>
+      </tr>
+      <tr>
+        <td><code>switchToContact()</code></td>
+        <td>-</td>
+        <td>切换到通讯录</td>
+      </tr>
+      <tr>
+        <td><code>openConversation(type, id)</code></td>
+        <td>type: 'user'|'group', id: string</td>
+        <td>打开指定会话</td>
+      </tr>
+      <tr>
+        <td><code>setTheme(theme)</code></td>
+        <td>theme: string</td>
+        <td>切换主题</td>
+      </tr>
+      <tr>
+        <td><code>destroy()</code></td>
+        <td>-</td>
+        <td>销毁实例</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 事件监听 -->
+  <div class="demo-section">
+    <h2>📡 事件监听</h2>
+    <div class="code-block">
+<pre><span class="comment">// 监听未读消息数变化</span>
+<span class="function">chat</span>.<span class="function">on</span>(<span class="highlight">'unreadCount'</span>, (<span class="highlight">count</span>) => {
+  <span class="function">console</span>.<span class="function">log</span>(<span class="highlight">'未读消息:'</span>, count);
+});
+
+<span class="comment">// 监听新消息</span>
+<span class="function">chat</span>.<span class="function">on</span>(<span class="highlight">'newMessage'</span>, (<span class="highlight">message</span>) => {
+  <span class="function">console</span>.<span class="function">log</span>(<span class="highlight">'新消息:'</span>, message);
+});
+
+<span class="comment">// 监听窗口打开</span>
+<span class="function">chat</span>.<span class="function">on</span>(<span class="highlight">'open'</span>, () => {
+  <span class="function">console</span>.<span class="function">log</span>(<span class="highlight">'聊天窗口已打开'</span>);
+});</pre>
+    </div>
+  </div>
+
+  <!-- 完整示例 -->
+  <div class="demo-section">
+    <h2>📝 完整示例</h2>
+    <div class="code-block">
+<pre><span class="comment">&lt;!-- 在 OA 系统页面中集成 --&gt;</span>
+&lt;!<span class="keyword">DOCTYPE</span> html&gt;
+&lt;<span class="keyword">html</span>&gt;
+&lt;<span class="keyword">head</span>&gt;
+  &lt;<span class="keyword">title</span>&gt;OA系统&lt;/<span class="keyword">title</span>&gt;
+&lt;/<span class="keyword">head</span>&gt;
+&lt;<span class="keyword">body</span>&gt;
+  <span class="comment">&lt;!-- OA 系统内容 --&gt;</span>
+  &lt;<span class="keyword">div</span> <span class="highlight">class</span>=<span class="highlight">"oa-container"</span>&gt;
+    &lt;<span class="keyword">h1</span>&gt;欢迎使用OA系统&lt;/<span class="keyword">h1</span>&gt;
+    &lt;<span class="keyword">p</span>&gt;您的日常工作平台&lt;/<span class="keyword">p</span>&gt;
+  &lt;/<span class="keyword">div</span>&gt;
+
+  <span class="comment">&lt;!-- 引入 LumenIM SDK --&gt;</span>
+  &lt;<span class="keyword">script</span> <span class="highlight">src</span>=<span class="highlight">"lumenim-embed-sdk.js"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+  &lt;<span class="keyword">script</span>&gt;
+    <span class="comment">// 初始化聊天组件</span>
+    <span class="keyword">const</span> chat = <span class="keyword">new</span> LumenIMEmbed({
+      serverUrl: <span class="highlight">'https://im.company.com'</span>,
+      theme: <span class="highlight">'light-gray'</span>,
+      authToken: <span class="highlight">'user-jwt-token'</span>,  <span class="comment">// 可选：自动登录</span>
+      debug: <span class="keyword">true</span>
+    });
+
+    <span class="comment">// 监听事件</span>
+    chat.on(<span class="highlight">'ready'</span>, () => {
+      console.log(<span class="highlight">'LumenIM 已就绪'</span>);
+    });
+
+    chat.on(<span class="highlight">'unreadCount'</span>, (count) => {
+      <span class="comment">// 更新 OA 系统未读数显示</span>
+      document.getElementById(<span class="highlight">'oa-unread-badge'</span>).textContent = count;
+    });
+  &lt;/<span class="keyword">script</span>&gt;
+&lt;/<span class="keyword">body</span>&gt;
+&lt;/<span class="keyword">html</span>&gt;</pre>
+    </div>
+  </div>
+
+  <!-- OA 系统模拟 -->
+  <div class="demo-section">
+    <h2>🖥️ 效果预览</h2>
+    <p>下方模拟了 OA 系统集成 LumenIM 后的效果：</p>
+    <div class="oa-simulator">
+      <h3>🏢 企业OA系统</h3>
+      <div class="oa-content">
+        <p>OA系统页面内容区域</p>
+        <p style="opacity: 0.8; font-size: 14px;">右下角会出现红色悬浮按钮，点击打开聊天窗口</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入 SDK 并初始化 -->
+  <script src="lumenim-embed-sdk.js"></script>
+  <script>
+    // 初始化聊天组件
+    const chat = new LumenIMEmbed({
+      serverUrl: 'http://localhost:5173',
+      theme: 'light-gray',
+      debug: true
+    });
+
+    // 监听事件
+    chat.on('ready', () => {
+      console.log('✅ LumenIM 已就绪');
+    });
+
+    chat.on('unreadCount', (count) => {
+      console.log('📨 未读消息:', count);
+    });
+
+    chat.on('newMessage', (message) => {
+      console.log('💬 新消息:', message);
+    });
+  </script>
+</body>
+</html>
