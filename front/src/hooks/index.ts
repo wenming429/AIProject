@@ -1,6 +1,7 @@
 export * from './useAccessPrompt.ts'
 export * from './useClickEvent.ts'
 export * from './useConnectStatus.ts'
+export * from './useDesktop.ts'
 export * from './useEventBus.ts'
 export * from './useFriendsMenu.ts'
 export * from './useGroupListMenu.ts'
