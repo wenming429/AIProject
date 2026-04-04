@@ -8,6 +8,9 @@ const themeModeKey = 'theme-mode'
 // 有效的主题键
 const validThemes = ['huaxia-red', 'light-gray']
 
+// 默认主题
+const defaultTheme = 'light-gray'
+
 export function useThemeMode() {
   const settingsStore = useSettingsStore()
   
@@ -15,10 +18,10 @@ export function useThemeMode() {
   const themeMode = computed(() => {
     const theme = settingsStore.themeMode
     // 兼容旧主题值
-    if (theme === 'light') return 'huaxia-red'
-    if (theme === 'dark') return 'huaxia-red'
-    if (theme === 'auto') return 'huaxia-red'
-    return validThemes.includes(theme) ? theme : 'huaxia-red'
+    if (theme === 'light') return defaultTheme
+    if (theme === 'dark') return defaultTheme
+    if (theme === 'auto') return defaultTheme
+    return validThemes.includes(theme) ? theme : defaultTheme
   })
 
   // 应用主题到 DOM
@@ -78,7 +81,7 @@ export function useThemeSwitcher() {
   }
   
   const themes = [
-    { key: 'huaxia-red', name: '华夏红', color: '#BF0008' },
+    { key: 'huaxia-red', name: '华夏红', color: '#A70006' },
     { key: 'light-gray', name: '浅灰', color: '#5B6B79' },
   ]
   

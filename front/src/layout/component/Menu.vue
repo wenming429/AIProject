@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useSettingsStore, useTalkStore, useUserStore } from '@/store'
-import { GithubOne, Message, NotebookOne, People, SettingTwo } from '@icon-park/vue-next'
+import { Message, NotebookOne, People, SettingTwo } from '@icon-park/vue-next'
 import AccountCard from './AccountCard.vue'
 import { NModal } from 'naive-ui'
 import { useThemeMode } from '@/hooks'
@@ -128,10 +128,6 @@ const isActive = (menu: any) => {
         </template>
         <AccountCard />
       </n-popover>
-
-      <span class="online-text" :class="{ online: userStore.online }" :style="{ color: currentTheme.navText }">
-        {{ userStore.online ? '在线' : '连接中...' }}
-      </span>
     </header>
 
     <main class="menu-main">
@@ -164,16 +160,12 @@ const isActive = (menu: any) => {
           />
         </div>
 
+
         <span :style="{ color: currentTheme.navText }">{{ nav.title }}</span>
       </div>
     </main>
 
     <footer class="menu-footer">
-      <div>
-        <a class="pointer" href="https://github.com/gzydong/LumenIM" target="_blank">
-          <github-one theme="outline" size="22" :fill="currentTheme.navIcon" :strokeWidth="2" />
-        </a>
-      </div>
       <div @click="onShowLogoutMenu" class="pointer" :style="{ color: currentTheme.navText }">退出</div>
     </footer>
 
@@ -204,8 +196,14 @@ const isActive = (menu: any) => {
   transition: background-color 0.3s;
   /* 修复 Electron 中菜单无法点击的问题 */
   -webkit-app-region: no-drag;
+  /* 移除横向滚动条 */
+  overflow: hidden;
 
-    .menu-header {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menu-header {
     height: 95px;
     width: 100%;
     flex-shrink: 0;
@@ -218,7 +216,7 @@ const isActive = (menu: any) => {
 
     .logo {
       transition: all 0.3s ease;
-      
+
       &:hover {
         transform: scale(1.08);
       }

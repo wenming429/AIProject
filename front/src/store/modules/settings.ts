@@ -21,8 +21,8 @@ export const useSettingsStore = defineStore('settings', {
       isLeaveWeb: false, // 是否离开网页
       isNotify: storage.get('isNotify', true), // 是否同意浏览器通知
       isFullScreen: storage.get('isFullScreen', true), // 是否客户端全屏
-      themeMode: storage.get('themeMode', 'huaxia-red') as string,
-      currentThemeMode: storage.get('themeMode', 'huaxia-red') as string,
+      themeMode: storage.get('themeMode', 'light-gray') as string,
+      currentThemeMode: storage.get('themeMode', 'light-gray') as string,
       // 名片背景主题色设置
       cardThemeColor: storage.get('cardThemeColor', '') as string,
       cardThemeGradient: storage.get('cardThemeGradient', '') as string,

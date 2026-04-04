@@ -4,17 +4,17 @@ import { GlobalThemeOverrides } from 'naive-ui'
 export const huaxiaRedTheme = {
   name: '华夏红',
   key: 'huaxia-red',
-  primary: '#BF0008',
-  primaryHover: '#D41820',
-  primaryPressed: '#A00006',
-  primaryLight: 'rgba(191, 0, 8, 0.1)',
+  primary: '#A70006',
+  primaryHover: '#C40008',
+  primaryPressed: '#8B0005',
+  primaryLight: 'rgba(167, 0, 6, 0.1)',
   
   // 背景色
   bgColor: '#ffffff',
   bgSecondary: '#fafafa',
   bgTertiary: '#f5f5f5',
   bgHover: '#f0f0f0',
-  bgActive: 'rgba(191, 0, 8, 0.05)',
+  bgActive: 'rgba(167, 0, 6, 0.05)',
   
   // 文字色
   textPrimary: '#333333',
@@ -36,7 +36,7 @@ export const huaxiaRedTheme = {
   messageListBg: '#ffffff',
   messageItemBg: '#ffffff',
   messageItemHover: '#f5f5f5',
-  messageItemActive: 'rgba(191, 0, 8, 0.08)',
+  messageItemActive: 'rgba(167, 0, 6, 0.08)',
   messageItemBorder: '#f0f0f0',
   messageText: '#333333',
   messageTextSecondary: '#999999',
@@ -45,12 +45,12 @@ export const huaxiaRedTheme = {
   // 头像
   avatarBg: '#e8e8e8',
   avatarText: '#666666',
-  avatarBorder: 'rgba(191, 0, 8, 0.3)',
-  avatarShadow: '0 2px 8px rgba(191, 0, 8, 0.15)',
+  avatarBorder: 'rgba(167, 0, 6, 0.3)',
+  avatarShadow: '0 2px 8px rgba(167, 0, 6, 0.15)',
   avatarDefaultBg: 'linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)',
   
   // 角标
-  badgeBg: '#BF0008',
+  badgeBg: '#A70006',
   badgeText: '#ffffff',
   
   // 聊天对话框
@@ -61,9 +61,9 @@ export const huaxiaRedTheme = {
   // 消息气泡
   bubbleLeftBg: '#f5f5f5',
   bubbleLeftText: '#333333',
-  bubbleRightBg: '#BF0008',
+  bubbleRightBg: '#A70006',
   bubbleRightText: '#ffffff',
-  bubbleLink: '#BF0008',
+  bubbleLink: '#A70006',
   
   // 输入框
   inputBg: '#f5f5f5',
@@ -72,7 +72,7 @@ export const huaxiaRedTheme = {
   inputPlaceholder: '#999999',
   
   // 按钮
-  buttonPrimaryBg: '#BF0008',
+  buttonPrimaryBg: '#A70006',
   buttonPrimaryText: '#ffffff',
   buttonSecondaryBg: '#f5f5f5',
   buttonSecondaryText: '#666666',
@@ -81,9 +81,9 @@ export const huaxiaRedTheme = {
   orgTreeBg: '#fafafa',
   orgTreeItemBg: 'transparent',
   orgTreeItemHover: '#f0f0f0',
-  orgTreeItemActive: 'rgba(191, 0, 8, 0.08)',
+  orgTreeItemActive: 'rgba(167, 0, 6, 0.08)',
   orgTreeText: '#333333',
-  orgTreeIcon: '#BF0008',
+  orgTreeIcon: '#A70006',
   
   // 人员卡片
   cardBg: '#ffffff',
@@ -210,10 +210,10 @@ export function getThemeConfig(themeKey: string) {
 // Naive UI 主题覆盖 - 华夏红
 export const huaxiaRedNaiveOverrides: GlobalThemeOverrides = {
   common: {
-    primaryColor: '#BF0008',
-    primaryColorHover: '#D41820',
-    primaryColorPressed: '#A00006',
-    primaryColorSuppl: '#BF0008',
+    primaryColor: '#A70006',
+    primaryColorHover: '#C40008',
+    primaryColorPressed: '#8B0005',
+    primaryColorSuppl: '#A70006',
     bodyColor: '#ffffff',
     textColor1: '#333333',
     textColor2: '#666666',
@@ -221,17 +221,17 @@ export const huaxiaRedNaiveOverrides: GlobalThemeOverrides = {
     borderColor: '#e8e8e8',
   },
   Button: {
-    colorPrimary: '#BF0008',
-    colorHoverPrimary: '#D41820',
-    colorPressedPrimary: '#A00006',
+    colorPrimary: '#A70006',
+    colorHoverPrimary: '#C40008',
+    colorPressedPrimary: '#8B0005',
   },
   Input: {
     borderColor: '#e8e8e8',
     borderHover: '#d9d9d9',
-    borderFocus: '#BF0008',
+    borderFocus: '#A70006',
   },
   Menu: {
-    color: '#BF0008',
+    color: '#A70006',
   },
   Dialog: {
     borderRadius: '10px',

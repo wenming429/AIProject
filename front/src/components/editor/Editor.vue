@@ -14,10 +14,11 @@ import {
   Pic,
   Ranking,
   SmilingFace,
-  SourceCode
+  SourceCode,
+  Send
 } from '@icon-park/vue-next'
 import Emitter from 'quill/core/emitter.js'
-import { computed, markRaw, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, reactive, ref, watch, nextTick } from 'vue'
 import MeEditorCode from './MeEditorCode.vue'
 import MeEditorEmoticon from './MeEditorEmoticon.vue'
 import MeEditorRecorder from './MeEditorRecorder.vue'
@@ -45,6 +46,42 @@ const {
 } = defineProps<Props>()
 
 const editor = ref(null)
+const editorMainRef = ref(null)
+
+// 自适应高度相关
+const minEditorHeight = 38 // 最小高度（单行）
+const maxEditorHeight = ref(200) // 最大高度
+let resizeObserver: ResizeObserver | null = null
+
+// 更新最大高度
+const updateMaxHeight = () => {
+  const el = editorMainRef.value as HTMLElement | null
+  if (!el) return
+  const containerHeight = el.clientHeight
+  // 最大高度为容器高度的 60%，留出空间给底部工具栏
+  const calculatedMax = Math.max(minEditorHeight, Math.floor(containerHeight * 0.6))
+  maxEditorHeight.value = calculatedMax
+}
+
+// 监听内容变化，自动调整输入框高度
+const adjustEditorHeight = () => {
+  nextTick(() => {
+    const quill = getQuill()
+    if (!quill) return
+
+    const root = quill.root
+    const scrollHeight = root.scrollHeight
+    const editorWrapper = root.closest('.editor-input-wrapper')
+
+    if (editorWrapper) {
+      // 内容高度 + padding
+      const contentHeight = scrollHeight + 16 // 8px * 2 padding
+      const newHeight = Math.min(Math.max(contentHeight, minEditorHeight), maxEditorHeight.value)
+      root.style.height = newHeight + 'px'
+      root.style.overflowY = contentHeight > maxEditorHeight.value ? 'auto' : 'hidden'
+    }
+  })
+}
 
 const getQuill = () => {
   // @ts-expect-error
@@ -139,7 +176,8 @@ const editorOption = {
   }
 }
 
-const navs = reactive([
+// 输入框下方的功能菜单
+const footerNavs = reactive([
   {
     title: '图片',
     icon: markRaw(Pic),
@@ -317,6 +355,9 @@ function onEditorChange() {
   }
 
   callback('input_event', text)
+
+  // 自动调整输入框高度
+  adjustEditorHeight()
 }
 
 function loadEditorDraftText() {
@@ -372,10 +413,25 @@ watch(() => indexName, loadEditorDraftText, { immediate: true })
 
 onMounted(() => {
   loadEditorDraftText()
+
+  // 设置 ResizeObserver 监听容器尺寸变化
+  if (editorMainRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      updateMaxHeight()
+      adjustEditorHeight()
+    })
+    resizeObserver.observe(editorMainRef.value)
+    updateMaxHeight()
+  }
 })
 
 onUnmounted(() => {
   hideMentionDom()
+  // 清理 ResizeObserver
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 
 useEventBus([
@@ -386,66 +442,61 @@ useEventBus([
 
 <template>
   <section class="el-container is-vertical editor">
-    <header class="el-header toolbar">
-      <n-popover
-        placement="top-start"
-        trigger="click"
-        raw
-        :width="300"
-        ref="emoticonRef"
-        style="
-          width: 500px;
-          height: 250px;
-          border-radius: 10px;
-          overflow: hidden;
-          box-shadow: none;
-          border: 1px solid var(--border-color);
-        "
-      >
-        <template #trigger>
-          <div class="toolbar-item">
-            <n-icon size="18" class="icon" :component="SmilingFace" />
-            <p class="title">表情符号</p>
-          </div>
-        </template>
+    <form enctype="multipart/form-data" style="display: none">
+      <input type="file" ref="fileImageRef" accept="image/*" @change="onUploadFile" />
+      <input type="file" ref="uploadFileRef" @change="onUploadFile" />
+    </form>
 
-        <MeEditorEmoticon @on-select="onEmoticonEvent" />
-      </n-popover>
-
-      <div
-        class="toolbar-item"
-        v-for="nav in navs"
-        :key="nav.title"
-        v-show="nav.show"
-        @click="nav.click"
-      >
-        <n-icon size="18" class="icon" :component="nav.icon" />
-        <p class="title">{{ nav.title }}</p>
-      </div>
-
-      <div
-        v-if="showAsideEment"
-        class="toolbar-item"
-        style="margin-left: auto"
-        @click="emit('trigger-aside')"
-      >
-        <n-icon class="icon" size="18" :component="showAside ? ExpandLeft : ExpandRight" />
-      </div>
-    </header>
-
-    <main class="el-main">
-      <form enctype="multipart/form-data" style="display: none">
-        <input type="file" ref="fileImageRef" accept="image/*" @change="onUploadFile" />
-        <input type="file" ref="uploadFileRef" @change="onUploadFile" />
-      </form>
-
+    <div class="editor-input-wrapper" ref="editorMainRef">
       <QuillEditor
         ref="editor"
         :options="editorOption"
         @change="onEditorChange"
-        style="height: 100%"
+        class="editor-quill"
       />
-    </main>
+    </div>
+
+    <!-- 输入框下方工具栏 -->
+    <footer class="el-footer footer-toolbar">
+      <div class="footer-navs">
+        <n-popover
+          placement="top-start"
+          trigger="click"
+          raw
+          :width="300"
+          ref="emoticonRef"
+          style="
+            width: 500px;
+            height: 250px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+          "
+        >
+          <template #trigger>
+            <div class="footer-nav-item">
+              <n-icon size="18" class="icon" :component="SmilingFace" />
+            </div>
+          </template>
+          <MeEditorEmoticon @on-select="onEmoticonEvent" />
+        </n-popover>
+
+        <div
+          class="footer-nav-item"
+          v-for="nav in footerNavs"
+          :key="nav.title"
+          v-show="nav.show"
+          @click="nav.click"
+        >
+          <n-icon size="18" class="icon" :component="nav.icon" />
+        </div>
+      </div>
+      <div class="send-btn" @click="onSendMessage">
+        <n-icon size="18" :component="Send" />
+        <span>发送</span>
+      </div>
+    </footer>
   </section>
 
   <MeEditorVote v-if="isShowEditorVote" @close="isShowEditorVote = false" @submit="onVoteEvent" />
@@ -466,42 +517,108 @@ useEventBus([
 <style lang="less" scoped>
 .editor {
   --tip-bg-color: rgb(241 241 241 / 90%);
+  --send-btn-bg: var(--im-primary-color, #5B6B79);
+  --send-btn-hover: var(--im-primary-hover, #6B7B89);
 
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  padding-bottom: 0;
+  box-sizing: border-box;
 
-  .toolbar {
-    height: 38px;
+  .editor-input-wrapper {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    margin: 0 0 12px 0;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    background: #ffffff;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
     display: flex;
+    flex-direction: column;
 
-    .toolbar-item {
+    &:hover,
+    &:focus-within {
+      border-color: var(--im-primary-color);
+      box-shadow: 0 0 0 2px rgba(91, 107, 121, 0.1);
+    }
+
+    :deep(.quill-editor) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+
+      > section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+    }
+  }
+
+  .footer-toolbar {
+    flex-shrink: 0;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    background: var(--im-bg-color);
+
+    .footer-navs {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 35px;
-      margin: 0 2px;
-      position: relative;
-      user-select: none;
-      cursor: pointer;
+      gap: 4px;
 
-      .title {
-        display: none;
-        position: absolute;
-        top: 40px;
-        left: 0px;
-        line-height: 26px;
-        background-color: var(--tip-bg-color);
-        color: var(--im-text-color);
-        min-width: 20px;
-        font-size: 12px;
-        padding: 0 5px;
-        border-radius: 2px;
-        white-space: pre;
-        user-select: none;
-        z-index: 999999999999;
+      .footer-nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--im-text-secondary);
+
+        &:hover {
+          background: var(--im-bg-hover);
+          color: var(--im-primary-color);
+        }
+
+        .icon {
+          transition: color 0.2s;
+        }
+      }
+    }
+
+    .send-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 6px;
+      background: var(--send-btn-bg);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: var(--send-btn-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
 
-      &:hover .title {
-        display: block;
+      &:active {
+        transform: translateY(0);
+        box-shadow: none;
       }
     }
   }
@@ -517,11 +634,22 @@ html[theme-mode='dark'] {
 <style lang="less">
 .ql-container.ql-snow {
   border: unset;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .ql-editor {
+  flex: 1;
   padding: 8px;
   border: unset;
+  background: #ffffff;
+  border-radius: 8px;
+  color: #333;
+  box-sizing: border-box;
+  min-height: 0;
+  overflow-y: auto;
 
   &::-webkit-scrollbar {
     width: 3px;
@@ -614,6 +742,21 @@ html[theme-mode='dark'] {
 html[theme-mode='dark'] {
   .ql-editor.ql-blank::before {
     color: #57575a;
+  }
+
+  .ql-editor {
+    background: #2c2c32;
+    color: #e0e0e0;
+  }
+
+  .editor-input-wrapper {
+    border-color: #444;
+    background: #2c2c32;
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--im-primary-color);
+    }
   }
 
   .quote-card-content {

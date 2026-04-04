@@ -136,6 +136,8 @@ const onSetMenu = () => {
     justify-content: center;
     color: var(--text-secondary);
     transition: color 0.3s;
+    /* 修复 Electron 中菜单按钮无法点击的问题 */
+    -webkit-app-region: no-drag;
 
     &:hover {
       color: var(--primary-color);
@@ -190,6 +192,8 @@ const onSetMenu = () => {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    /* 修复 Electron 中功能键无法点击的问题 */
+    -webkit-app-region: no-drag;
 
     .icon {
       cursor: pointer;
