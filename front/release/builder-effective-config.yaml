@@ -1,0 +1,77 @@
+directories:
+  output: release
+  buildResources: build
+$schema: https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json
+appId: com.lumenim.app
+productName: LumenIM
+copyright: Copyright © 2024 LumenIM
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - '!node_modules/**/*'
+      - '!src/**/*'
+      - '!scripts/**/*'
+extraMetadata:
+  main: electron/main.cjs
+asar: true
+asarUnpack:
+  - build/**/*
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  icon: build/icons/icon.ico
+  artifactName: ${productName}-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: LumenIM
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  icon: build/icons/icon.icns
+  category: public.app-category.social-networking
+  artifactName: ${productName}-${version}-${arch}.${ext}
+dmg:
+  title: ${productName}
+  contents:
+    - x: 130
+      'y': 220
+    - x: 410
+      'y': 220
+      type: link
+      path: /Applications
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: build/icons
+  category: Network
+  artifactName: ${productName}-${version}-${arch}.${ext}
+publish:
+  provider: github
+  owner: gzydong
+  repo: LumenIM
+electronDownload:
+  cache: .electron-cache
+electronVersion: 33.4.11

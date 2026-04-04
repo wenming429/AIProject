@@ -37,7 +37,7 @@
         "arch": ["x64"]
       }
     ],
-    "icon": "build/icons/icon.ico",
+    "icon": "build/icons/lumenim.ico",
     "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
 
@@ -62,7 +62,7 @@
         "arch": ["x64", "arm64"]
       }
     ],
-    "icon": "build/icons/icon.icns",
+    "icon": "build/icons/lumenim.icns",
     "category": "public.app-category.social-networking",
     "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
@@ -103,5 +103,9 @@
     "provider": "github",
     "owner": "gzydong",
     "repo": "LumenIM"
+  },
+
+  "electronDownload": {
+    "cache": ".electron-cache"
   }
 }

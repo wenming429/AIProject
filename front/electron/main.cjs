@@ -53,14 +53,26 @@ function saveConfig(config) {
 // 构建加载 URL
 function getLoadURL() {
   if (isDev) {
+    console.log('[LumenIM] Loading from dev server:', `http://localhost:${DEV_PORT}`)
     return `http://localhost:${DEV_PORT}`
   }
-  return `file://${path.join(__dirname, '../dist/index.html')}`
+
+  // 生产环境使用 file:// 协议加载本地文件
+  // 注意：需要确保 dist/index.html 使用 hash 路由模式构建
+  const indexPath = path.join(__dirname, '../dist/index.html')
+  const loadURL = `file://${indexPath}`
+
+  console.log('[LumenIM] Loading from file:', loadURL)
+  console.log('[LumenIM] File exists:', require('fs').existsSync(indexPath))
+
+  return loadURL
 }
 
 // 创建主窗口
 function createMainWindow() {
   const config = loadConfig()
+
+  console.log('[LumenIM] Creating main window with config:', config)
 
   mainWindow = new BrowserWindow({
     width: config.windowWidth || 1200,
@@ -79,11 +91,13 @@ function createMainWindow() {
       webSecurity: true,
       allowRunningInsecureContent: false
     },
-    icon: path.join(__dirname, '../build/icons/icon.png')
+    icon: path.join(__dirname, '../build/icons/lumenim.ico')
   })
 
   // 加载内容
-  mainWindow.loadURL(getLoadURL())
+  const loadURL = getLoadURL()
+  console.log('[LumenIM] Loading URL:', loadURL)
+  mainWindow.loadURL(loadURL)
 
   // 开发环境打开 DevTools
   if (isDev) {
@@ -137,20 +151,38 @@ function createMainWindow() {
 
 // 创建系统托盘
 function createTray() {
-  // 托盘图标 - Windows 使用 .ico，macOS 使用 .png
-  const iconPath = isMac
-    ? path.join(__dirname, '../build/icons/lumenim.png')
-    : path.join(__dirname, '../build/icons/lumenim.ico')
+  // 托盘图标路径 - 按平台选择合适的图标
+  let iconPath
+  if (isMac) {
+    iconPath = path.join(__dirname, '../build/icons/lumen-im-mac.png')
+  } else {
+    // Windows 使用 .ico 文件
+    iconPath = path.join(__dirname, '../build/icons/lumenim.ico')
+  }
+
+  console.log('[LumenIM] Tray icon path:', iconPath)
+  console.log('[LumenIM] Tray icon exists:', fs.existsSync(iconPath))
+
   let trayIcon
 
   if (fs.existsSync(iconPath)) {
     trayIcon = nativeImage.createFromPath(iconPath)
-    // macOS 需要模板图片
+    // macOS 需要调整图标大小
     if (isMac) {
       trayIcon = trayIcon.resize({ width: 16, height: 16 })
     }
+    // Windows：如果 .ico 文件太大或格式不对，尝试使用 PNG
+    if (!isMac && trayIcon.isEmpty()) {
+      console.log('[LumenIM] ICO is empty, trying PNG fallback')
+      const pngPath = path.join(__dirname, '../build/icons/lumenim.png')
+      if (fs.existsSync(pngPath)) {
+        trayIcon = nativeImage.createFromPath(pngPath).resize({ width: 16, height: 16 })
+      }
+    }
   } else {
-    // 创建默认图标
+    // 图标不存在，创建默认图标
+    console.warn('[LumenIM] Tray icon not found, creating default icon')
+    // 创建一个简单的 16x16 默认图标
     trayIcon = nativeImage.createEmpty()
   }
 

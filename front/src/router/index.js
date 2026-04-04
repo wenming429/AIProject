@@ -56,8 +56,25 @@ const routes = [
   }
 ]
 
+/**
+ * 获取路由历史模式
+ * Electron 打包后使用 file:// 协议，必须使用 hash 模式
+ * 检测逻辑：
+ * 1. VITE_ROUTER_MODE=hash 强制使用 hash
+ * 2. 检测是否在 Electron 环境中（window.$electron 存在）
+ * 3. 其他情况使用配置的模式
+ */
 const getHistoryMode = () => {
-  return import.meta.env.VITE_ROUTER_MODE == 'hash' ? createWebHashHistory() : createWebHistory()
+  // Electron 环境强制使用 hash 路由
+  const isElectron = typeof window !== 'undefined' && window.$electron !== undefined
+  const routerMode = import.meta.env.VITE_ROUTER_MODE
+
+  // 优先使用环境变量设置
+  if (routerMode === 'hash' || isElectron) {
+    return createWebHashHistory()
+  }
+  // 使用配置的 history 模式
+  return createWebHistory()
 }
 
 const router = createRouter({

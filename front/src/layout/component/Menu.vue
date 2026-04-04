@@ -70,16 +70,39 @@ const onQuitApp = () => {
   }
 }
 
-const onClickMenu = (menu) => {
-  if (menu.external) {
-    window.open(menu.link)
-    return
+// 导航点击处理 - 增强版，带错误处理和调试
+const onClickMenu = (menu: any, event?: Event) => {
+  try {
+    // 阻止事件冒泡，防止被其他元素拦截
+    event?.stopPropagation()
+    event?.preventDefault()
+
+    if (menu.external) {
+      window.open(menu.link)
+      return
+    }
+
+    // 获取当前路径
+    const currentPath = router.currentRoute.value.path
+    // 目标路径
+    const targetPath = menu.link
+
+    // 如果点击的是当前页面，不进行导航
+    if (currentPath === targetPath || currentPath.startsWith(targetPath + '/')) {
+      return
+    }
+
+    // 执行导航
+    router.push(targetPath)
+  } catch (error) {
+    console.error('[Menu] Navigation error:', error)
   }
-  router.push(menu.link)
 }
 
-const isActive = (menu) => {
-  return router.currentRoute.value.path.indexOf(menu.link) >= 0
+// 判断菜单是否激活
+const isActive = (menu: any) => {
+  const path = router.currentRoute.value.path
+  return path === menu.link || path.startsWith(menu.link + '/')
 }
 </script>
 
