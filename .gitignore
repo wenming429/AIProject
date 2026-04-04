@@ -12,6 +12,8 @@ backend/go-chat
 backend/dist/
 front/dist/
 front/build/
+front/release/
+front/.electron-cache/
 
 # IDE
 .idea/
