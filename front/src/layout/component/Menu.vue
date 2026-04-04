@@ -202,6 +202,8 @@ const isActive = (menu: any) => {
   flex-direction: column;
   box-sizing: border-box;
   transition: background-color 0.3s;
+  /* 修复 Electron 中菜单无法点击的问题 */
+  -webkit-app-region: no-drag;
 
     .menu-header {
     height: 95px;
