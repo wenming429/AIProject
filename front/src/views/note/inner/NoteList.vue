@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ArticleListResponse_Item } from '@/apis/types.js'
+import { ArticleListResponse_Item } from '@/apis/types'
 import Loading from '@/components/basic/Loading.vue'
 import { useNoteStore } from '@/store'
 import { debounce } from '@/utils/common'

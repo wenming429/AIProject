@@ -355,7 +355,7 @@ CREATE TABLE IF NOT EXISTS `organize_dept`
     `parent_id`  int              NOT NULL DEFAULT '0' COMMENT '父部门id',
     `ancestors`  varchar(128)     NOT NULL DEFAULT '' COMMENT '祖级列表',
     `dept_name`  varchar(64)      NOT NULL DEFAULT '' COMMENT '部门名称',
-    `order_num`  int unsigned     NOT NULL DEFAULT '1' COMMENT '显示顺序',
+    `order_num`  double          NOT NULL DEFAULT '1' COMMENT '显示顺序',
     `leader`     varchar(64)      NOT NULL COMMENT '负责人',
     `phone`      varchar(11)      NOT NULL COMMENT '联系电话',
     `email`      varchar(64)      NOT NULL COMMENT '邮箱',
@@ -499,6 +499,7 @@ CREATE TABLE IF NOT EXISTS `talk_user_message`
 
 CREATE TABLE `users` (
  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+ `username` varchar(50) NOT NULL DEFAULT '' COMMENT '登录账号',
  `mobile` varchar(11) NOT NULL DEFAULT '' COMMENT '手机号',
  `nickname` varchar(64) NOT NULL DEFAULT '' COMMENT '用户昵称',
  `avatar` varchar(255) NOT NULL DEFAULT '' COMMENT '用户头像',
@@ -512,6 +513,7 @@ CREATE TABLE `users` (
  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
  PRIMARY KEY (`id`) USING BTREE,
+ UNIQUE KEY `uk_username` (`username`) USING BTREE,
  UNIQUE KEY `uk_mobile` (`mobile`) USING BTREE,
  KEY `idx_created_at` (`created_at`) USING BTREE,
  KEY `idx_updated_at` (`updated_at`) USING BTREE

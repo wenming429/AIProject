@@ -1,7 +1,7 @@
 import { fetchArticleDelete, fetchArticleMove } from '@/apis/api'
 import { fetchApi } from '@/apis/request'
 import { useInject } from '@/hooks'
-import { IDropdownOption, useCommonContextMenu } from '@/hooks/useCommonContextMenu.ts'
+import { IDropdownOption, useCommonContextMenu } from '@/hooks/useCommonContextMenu'
 import { useNoteStore } from '@/store'
 export function useNoteListContextMenu() {
   const store = useNoteStore()

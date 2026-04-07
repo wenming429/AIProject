@@ -7,7 +7,7 @@ type OrganizeDept struct {
 	ParentId  int       `gorm:"column:parent_id;" json:"parent_id"`                       // 父部门id
 	Ancestors string    `gorm:"column:ancestors;" json:"ancestors"`                       // 祖级列表
 	DeptName  string    `gorm:"column:dept_name;" json:"dept_name"`                       // 部门名称
-	OrderNum  int       `gorm:"column:order_num;" json:"order_num"`                       // 显示顺序
+	OrderNum  float64   `gorm:"column:order_num;" json:"order_num"`                       // 显示顺序
 	Leader    string    `gorm:"column:leader;" json:"leader"`                             // 负责人
 	Phone     string    `gorm:"column:phone;" json:"phone"`                               // 联系电话
 	Email     string    `gorm:"column:email;" json:"email"`                               // 邮箱
