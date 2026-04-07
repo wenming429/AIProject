@@ -17,7 +17,7 @@ async function restore() {
   
   // 导入 lumenim.sql
   const fs = require('fs');
-  const sql1 = fs.readFileSync('d:/学习资料/AI_Projects/LumenIM/backend/sql/lumenim.sql', 'utf8');
+  const sql1 = fs.readFileSync('./backend/sql/lumenim.sql', 'utf8');
   const statements1 = sql1.split(';').filter(s => s.trim());
   for (const stmt of statements1) {
     if (stmt.trim()) {
@@ -29,7 +29,7 @@ async function restore() {
   console.log('lumenim.sql 已导入');
   
   // 导入 test_data.sql
-  const sql2 = fs.readFileSync('d:/学习资料/AI_Projects/LumenIM/test_data.sql', 'utf8');
+  const sql2 = fs.readFileSync('./test_data.sql', 'utf8');
   const statements2 = sql2.split(';').filter(s => s.trim());
   for (const stmt of statements2) {
     if (stmt.trim()) {

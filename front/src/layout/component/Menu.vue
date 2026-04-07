@@ -132,7 +132,7 @@ const isActive = (menu: any) => {
 
     <main class="menu-main">
       <div
-        v-for="nav in menus"
+        v-for="nav in menus.filter(m => m.show !== false)"
         :key="nav.link"
         :class="{
           'menu-items': true,
@@ -170,7 +170,16 @@ const isActive = (menu: any) => {
     </footer>
 
     <!-- 退出菜单弹窗 -->
-    <n-modal v-model:show="showLogoutMenu" :mask-closable="true">
+    <n-popover
+      trigger="click"
+      :show="showLogoutMenu"
+      @update:show="showLogoutMenu = $event"
+      placement="top"
+      :show-arrow="false"
+    >
+      <template #trigger>
+        <div></div>
+      </template>
       <div class="logout-menu">
         <div class="logout-item" @click="onLogout">
           <span>切换账号</span>
@@ -182,7 +191,7 @@ const isActive = (menu: any) => {
           <span class="logout-hint">完全关闭应用</span>
         </div>
       </div>
-    </n-modal>
+    </n-popover>
   </section>
 </template>
 
@@ -369,14 +378,16 @@ const isActive = (menu: any) => {
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  padding: 8px 0;
 }
 
 .logout-item {
-  padding: 14px 16px;
+  padding: 14px 20px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   transition: background 0.2s;
+  user-select: none;
 
   &:hover {
     background: var(--im-hover-bg-color);

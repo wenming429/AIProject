@@ -6,10 +6,12 @@ interface Props {
   expandedKeys: number[]
   selectedKey: number | null
   level?: number
+  maxLevel?: number  // 最大显示层级
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  level: 0
+  level: 0,
+  maxLevel: 4  // 默认最多显示4层
 })
 
 const emit = defineEmits<{
@@ -20,6 +22,28 @@ const emit = defineEmits<{
 const isExpanded = computed(() => props.expandedKeys.includes(props.item.dept_id))
 const isSelected = computed(() => props.selectedKey === props.item.dept_id)
 const hasChildren = computed(() => props.item.children && props.item.children.length > 0)
+
+// 层级深度超过限制时强制折叠
+const shouldAutoCollapse = computed(() => props.level >= props.maxLevel)
+
+// 计算缩进（根据层级动态调整）
+const paddingLeft = computed(() => {
+  const basePadding = 12
+  const levelPadding = Math.min(props.level, props.maxLevel) * 12
+  return `${basePadding + levelPadding}px`
+})
+
+// 根据层级动态调整字体大小和间距
+const nodeStyle = computed(() => {
+  const baseFontSize = 13
+  const minFontSize = 11
+  const fontSize = Math.max(minFontSize, baseFontSize - props.level * 0.5)
+  
+  return {
+    fontSize: `${fontSize}px`,
+    padding: props.level > 2 ? '4px 8px' : '6px 10px'
+  }
+})
 
 const onToggle = (e: Event) => {
   e.stopPropagation()
@@ -38,9 +62,10 @@ const onSelect = () => {
       :class="{ 
         expanded: isExpanded, 
         selected: isSelected,
-        'has-children': hasChildren 
+        'has-children': hasChildren,
+        'auto-collapsed': shouldAutoCollapse
       }"
-      :style="{ paddingLeft: (12 + level * 16) + 'px' }"
+      :style="{ paddingLeft: paddingLeft, ...nodeStyle }"
       @click="onSelect"
     >
       <!-- 展开/折叠图标 -->
@@ -68,7 +93,9 @@ const onSelect = () => {
       </span>
       
       <!-- 节点文本 -->
-      <span class="node-label">{{ item.dept_name || item.label }}</span>
+      <span class="node-label" :class="{ 'compact-text': level > 2 }">
+        {{ item.dept_name || item.label }}
+      </span>
       
       <!-- 人数 -->
       <span v-if="item.count || item.suffix" class="node-count">
@@ -88,6 +115,7 @@ const onSelect = () => {
         :expandedKeys="expandedKeys"
         :selectedKey="selectedKey"
         :level="level + 1"
+        :max-level="maxLevel"
         @toggle="(item, e) => $emit('toggle', item, e)"
         @select="(item) => $emit('select', item)"
       />
@@ -100,7 +128,7 @@ const onSelect = () => {
   .tree-node-content {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 6px 10px;
     cursor: pointer;
     border-radius: 6px;
     margin: 2px 4px;
@@ -131,10 +159,26 @@ const onSelect = () => {
       }
     }
 
+    // 深层级自动折叠样式
+    &.auto-collapsed {
+      opacity: 0.85;
+      
+      .node-label {
+        font-size: 11px;
+      }
+    }
+
+    // 紧凑文本样式
+    .compact-text {
+      font-size: 11px !important;
+      letter-spacing: -0.3px;
+    }
+
     // 展开/折叠图标
     .expand-icon {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -161,18 +205,20 @@ const onSelect = () => {
     }
 
     .expand-placeholder {
-      width: 20px;
+      width: 18px;
+      min-width: 18px;
       margin-right: 4px;
     }
 
     // 文件夹图标
     .folder-icon {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-right: 6px;
+      margin-right: 4px;
       color: var(--tree-icon, #666);
       opacity: 0.85;
       transition: all 0.2s;
@@ -185,14 +231,16 @@ const onSelect = () => {
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 13px;
+      letter-spacing: 0;
     }
 
     // 人数
     .node-count {
-      font-size: 12px;
+      font-size: 11px;
       color: inherit;
       opacity: 0.6;
       margin-left: 4px;
+      min-width: 24px;
     }
   }
 

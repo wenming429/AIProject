@@ -125,12 +125,12 @@ VITE_SOCKET_API=ws://localhost:9502    # WebSocket 地址
 
 ### 基础测试数据
 ```bash
-mysql -u root -pwenming429 go_chat < d:/学习资料/AI_Projects/LumenIM/test_data.sql
+mysql -u root -pwenming429 go_chat < test_data.sql
 ```
 
 ### 系统资源数据
 ```bash
-mysql -u root -pwenming429 go_chat < d:/学习资料/AI_Projects/LumenIM/system_data.sql
+mysql -u root -pwenming429 go_chat < system_data.sql
 ```
 
 ---

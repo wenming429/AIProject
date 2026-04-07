@@ -12,7 +12,9 @@ INSERT INTO users (mobile, nickname, avatar, gender, password, motto, status, is
 ('13800000005', 'WangWu', '', 1, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW()),
 ('13800000006', 'ZhaoLiu', '', 2, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW()),
 ('13800000007', 'SunQi', '', 1, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW()),
-('13800000008', 'ZhouBa', '', 2, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW())
+('13800000008', 'ZhouBa', '', 2, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW()),
+('13800000009', 'shulifang', '', 1, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW()),
+('13800000010', 'ningxiaoying', '', 2, '$2a$10$MDkzvCBC4rSxfUFR81lZGu3EqiYBLRP4t6UoYoWmcqovZZc4PkDTW', '', 1, 2, NOW(), NOW())
 ON DUPLICATE KEY UPDATE nickname=VALUES(nickname);
 
 -- 2. Create contact groups

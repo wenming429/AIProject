@@ -139,7 +139,7 @@ async function fixComments(conn, tableName, correctData) {
 async function main() {
   console.log('=== 开始修复表/字段备注乱码 v2 ===\n');
 
-  const sqlFile = 'd:/学习资料/AI_Projects/LumenIM/backend/sql/lumenim.sql';
+  const sqlFile = './backend/sql/lumenim.sql';
   const parsed = parseSQLFile(sqlFile);
   console.log(`\n共解析 ${Object.keys(parsed).length} 张表\n`);
 

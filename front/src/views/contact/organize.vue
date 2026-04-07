@@ -17,6 +17,9 @@ const ancestors = ref('')
 const keywords = ref('')
 const items = ref<any[]>([])
 
+// 计算左侧树的最大高度，确保自适应布局
+const treeMaxHeight = 'calc(100vh - 240px)'
+
 const filter = computed(() => {
   return items.value.filter((item) => {
     return (
@@ -215,14 +218,14 @@ onMounted(() => {
             <n-icon :component="Peoples" />
             <span>组织架构</span>
           </div>
-          <n-scrollbar class="tree-scroll">
+          <div class="tree-container" :style="{ maxHeight: treeMaxHeight }">
             <DeptTree
               :data="tree"
               :default-expanded-keys="[-1]"
               :default-selected-keys="[-1]"
               @select="onDeptSelect"
             />
-          </n-scrollbar>
+          </div>
         </aside>
 
         <main class="el-main member-main" v-if="filter.length" style="padding: 12px 12px 12px 0">
@@ -320,6 +323,9 @@ onMounted(() => {
   background-color: var(--org-bg);
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   .dept-tree-header {
     display: flex;
@@ -331,17 +337,35 @@ onMounted(() => {
     font-size: 14px;
     font-weight: 500;
     color: var(--org-text);
+    flex-shrink: 0;
 
     .n-icon {
       color: var(--org-icon);
     }
   }
 
-  .tree-scroll {
+  .tree-container {
     flex: 1;
-    
-    :deep(.n-scrollbar-container) {
-      padding-right: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+
+    // 滚动条美化
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(128, 128, 128, 0.3);
+      border-radius: 2px;
+
+      &:hover {
+        background-color: rgba(128, 128, 128, 0.5);
+      }
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: transparent;
     }
   }
 }

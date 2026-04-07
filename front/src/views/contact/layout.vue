@@ -16,7 +16,8 @@ const menus = reactive([
   {
     name: '我的好友',
     path: '/contact/friend',
-    icon: markRaw(People)
+    icon: markRaw(People),
+    show: false
   },
   {
     name: '我的群聊',
@@ -26,7 +27,8 @@ const menus = reactive([
   {
     name: '公开群聊',
     path: '/contact/open-group',
-    icon: markRaw(PeoplesTwo)
+    icon: markRaw(PeoplesTwo),
+    show: false
   },
   {
     name: '企业组织',

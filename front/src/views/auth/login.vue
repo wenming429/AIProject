@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { fetchAuthLogin, fetchAuthOauth } from '@/apis/api'
+import { fetchAuthLogin } from '@/apis/api'
 import { sync } from '@/apis/request'
 import ws from '@/connect'
 import { useInject } from '@/hooks'
@@ -7,7 +7,7 @@ import { useUserStore } from '@/store'
 import { setToken } from '@/utils/auth.ts'
 import { rsaEncrypt } from '@/utils/rsa'
 import { playMusic } from '@/utils/talk'
-import { Github } from '@icon-park/vue-next'
+import { onBeforeUnmount } from 'vue'
 
 const { message } = useInject()
 const userStore = useUserStore()
@@ -18,7 +18,7 @@ const rules = {
   username: {
     required: true,
     trigger: ['blur', 'input'],
-    message: '账号不能为空'
+    message: '用户名不能为空'
   },
   password: {
     required: true,
@@ -38,7 +38,7 @@ const onLogin = async () => {
   sync(
     async () => {
       const data = await fetchAuthLogin({
-        mobile: model.username,
+        username: model.username,
         password: rsaEncrypt(model.password),
         platform: 'web'
       })
@@ -65,36 +65,85 @@ const onValidate = (e: Event) => {
 
 const onClickAccount = (type: number) => {
   if (type == 1) {
-    model.username = '13800000001'
+    model.username = 'shulifang'
     model.password = 'admin123'
   } else {
-    model.username = '13800000002'
+    model.username = 'ningxiaoying'
     model.password = 'admin123'
   }
 
   onLogin()
 }
 
-const toOauth = async (oauth_type: 'github' | 'gitee') => {
-  sync(async () => {
-    message.loading('正在跳转第三方授权登录页面，请稍等...', { duration: 5000 })
-    const data = await fetchAuthOauth({ oauth_type })
-    location.href = data.uri
-  })
+// 窗口控制功能
+const onMinimize = () => {
+  if ((window as any).$electron?.minimize) {
+    ;(window as any).$electron.minimize()
+  }
 }
+
+const onMaximize = () => {
+  if ((window as any).$electron?.maximize) {
+    ;(window as any).$electron.maximize()
+  }
+}
+
+const onClose = () => {
+  if ((window as any).$electron?.quitApp) {
+    ;(window as any).$electron.quitApp()
+  } else {
+    window.close()
+  }
+}
+
+// 组件卸载时清理
+onBeforeUnmount(() => {
+  // 清理可能残留的 DOM 元素
+  const existingOverlay = document.querySelector('.n-modal-mask')
+  if (existingOverlay) {
+    existingOverlay.remove()
+  }
+})
+
+// 导入 onBeforeUnmount
+import { onBeforeUnmount } from 'vue'
 </script>
 
 <template>
   <section class="el-container is-vertical login-box login">
-    <header class="el-header box-header">快捷登录</header>
+    <!-- 窗口控制栏 -->
+    <header class="window-controls">
+      <div class="window-title">用户登录</div>
+      <div class="window-buttons">
+        <div class="window-btn minimize" @click="onMinimize" title="最小化">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
+          </svg>
+        </div>
+        <div class="window-btn maximize" @click="onMaximize" title="最大化">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+          </svg>
+        </div>
+        <div class="window-btn close" @click="onClose" title="关闭">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </div>
+      </div>
+    </header>
 
-    <main class="el-main" style="padding: 3px">
+    <main class="el-main">
+      <!-- 用户头像 -->
+      <div class="avatar-container">
+        <img src="@/assets/image/avatar.png" alt="用户头像" class="avatar" />
+      </div>
+
       <n-form ref="formRef" size="large" :model="model" :rules="rules">
         <n-form-item path="username" :show-label="false">
           <n-input
-            placeholder="请输入手机号"
+            placeholder="请输入用户名"
             v-model:value="model.username"
-            :maxlength="11"
             @keydown.enter="onValidate"
           />
         </n-form-item>
@@ -109,9 +158,9 @@ const toOauth = async (oauth_type: 'github' | 'gitee') => {
           />
         </n-form-item>
 
-        <n-space>
-          <n-button text color="#409eff" @click="onClickAccount(1)"> 预览账号1 </n-button>
-          <n-button text color="#409eff" @click="onClickAccount(2)"> 预览账号2 </n-button>
+        <n-space justify="center" style="margin-top: 12px">
+          <n-button text color="#409eff" @click="onClickAccount(1)"> 账号1 </n-button>
+          <n-button text color="#409eff" @click="onClickAccount(2)"> 账号2 </n-button>
         </n-space>
 
         <n-button
@@ -123,38 +172,104 @@ const toOauth = async (oauth_type: 'github' | 'gitee') => {
           @click="onValidate"
           :loading="loading"
         >
-          立即登录
+          登录
         </n-button>
       </n-form>
-
-      <div class="helper">
-        <n-button text color="#409eff" @click="router.push('/auth/forget')"> 找回密码 </n-button>
-        <n-button text color="#409eff" @click="router.push('/auth/register')">
-          还没有账号？立即注册
-        </n-button>
-      </div>
     </main>
-
-    <footer class="el-footer" style="height: 90px">
-      <n-divider style="height: 30px; margin: 0">
-        <span style="color: #ccc; font-weight: 300"> 其它登录方式</span>
-      </n-divider>
-
-      <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px">
-        <github theme="filled" size="30" @click="toOauth('github')" class="pointer" />
-
-        <img
-          src="https://files.codelife.cc/icons/gitee.svg"
-          width="30"
-          style="background-color: red; border-radius: 50%"
-          @click="toOauth('gitee')"
-          class="pointer"
-        />
-      </div>
-    </footer>
   </section>
 </template>
 
 <style lang="less" scoped>
 @import '@/assets/css/login.less';
+
+// 固定窗口尺寸
+.login-box {
+  width: 360px;
+  height: 500px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: var(--im-bg-color);
+}
+
+// 确保输入框始终可点击
+:deep(.n-input),
+:deep(.n-button) {
+  pointer-events: auto !important;
+  z-index: 1;
+}
+
+// 窗口控制栏
+.window-controls {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: #f5f5f5;
+  border-radius: 10px 10px 0 0;
+
+  .window-title {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .window-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .window-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #666;
+
+    &:hover {
+      background: #e0e0e0;
+    }
+
+    &.close:hover {
+      background: #ff5f56;
+      color: #fff;
+    }
+  }
+}
+
+.box-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--im-text-color);
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--im-primary-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.mt-t20 {
+  margin-top: 20px;
+}
 </style>
