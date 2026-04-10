@@ -48,7 +48,7 @@ func (a *Auth) Login(ctx context.Context, in *web.AuthLoginRequest) (*web.AuthLo
 		return nil, err
 	}
 
-	user, err := a.UserService.Login(ctx, in.Mobile, string(password))
+	user, err := a.UserService.Login(ctx, in.Username, string(password))
 	if err != nil {
 		return nil, err
 	}

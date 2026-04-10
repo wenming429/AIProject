@@ -26,7 +26,7 @@ func (o *Organize) DepartmentList(ctx context.Context, req *web.OrganizeDepartme
 	session, _ := middleware.FormContext[entity.WebClaims](ctx)
 
 	uid := session.GetAuthID()
-	isOk, _ := o.OrganizeRepo.IsQiyeMember(ctx, uid)
+	_, _ = o.OrganizeRepo.IsQiyeMember(ctx, uid)
 	// 临时允许所有用户查看组织架构，便于测试
 	// if !isOk {
 	// 	return &web.OrganizeDepartmentListResponse{}, nil
@@ -88,7 +88,7 @@ func (o *Organize) PersonnelList(ctx context.Context, req *web.OrganizePersonnel
 	session, _ := middleware.FormContext[entity.WebClaims](ctx)
 	uid := session.GetAuthID()
 
-	isOk, _ := o.OrganizeRepo.IsQiyeMember(ctx, uid)
+	_, _ = o.OrganizeRepo.IsQiyeMember(ctx, uid)
 	// 临时允许所有用户查看组织架构，便于测试
 	// if !isOk {
 	// 	return &web.OrganizePersonnelListResponse{}, nil

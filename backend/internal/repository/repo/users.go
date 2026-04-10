@@ -26,6 +26,11 @@ func (u *Users) FindByMobile(ctx context.Context, mobile string) (*model.Users, 
 	return u.Repo.FindByWhere(ctx, "mobile = ?", mobile)
 }
 
+// FindByUsername 用户名查询
+func (u *Users) FindByUsername(ctx context.Context, username string) (*model.Users, error) {
+	return u.Repo.FindByWhere(ctx, "username = ?", username)
+}
+
 // IsMobileExist 判断手机号是否存在
 func (u *Users) IsMobileExist(ctx context.Context, mobile string) bool {
 	exist, _ := u.Repo.IsExist(ctx, "mobile = ?", mobile)

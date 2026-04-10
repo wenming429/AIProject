@@ -18,7 +18,7 @@ var _ IUserService = (*UserService)(nil)
 
 type IUserService interface {
 	Register(ctx context.Context, opt *UserRegisterOpt) (*model.Users, error)
-	Login(ctx context.Context, mobile string, password string) (*model.Users, error)
+	Login(ctx context.Context, username string, password string) (*model.Users, error)
 	Forget(ctx context.Context, opt *UserForgetOpt) (bool, error)
 	UpdatePassword(ctx context.Context, uid int, oldPassword string, password string) error
 	OauthBind(ctx context.Context, mobile string, oauthUser *model.OAuthUser) (int, error)
@@ -61,8 +61,8 @@ func (s *UserService) Register(ctx context.Context, opt *UserRegisterOpt) (*mode
 }
 
 // Login 登录处理
-func (s *UserService) Login(ctx context.Context, mobile string, password string) (*model.Users, error) {
-	user, err := s.UsersRepo.FindByMobile(ctx, mobile)
+func (s *UserService) Login(ctx context.Context, username string, password string) (*model.Users, error) {
+	user, err := s.UsersRepo.FindByUsername(ctx, username)
 	if err != nil {
 		if utils.IsSqlNoRows(err) {
 			return nil, entity.ErrAccountOrPassword

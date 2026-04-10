@@ -18,7 +18,7 @@ type MySQL struct {
 
 func (m *MySQL) Dsn() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local&allowPublicKeyRetrieval=true",
 		m.UserName,
 		m.Password,
 		m.Host,

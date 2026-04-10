@@ -220,8 +220,8 @@ export interface AuthForgetRequest {
 export interface AuthForgetResponse {}
 
 export interface AuthLoginRequest {
-  /** 登录手机号 */
-  mobile: string
+  /** 登录用户名 */
+  username: string
   /** 登录密码 */
   password: string
   /** 登录平台 */
