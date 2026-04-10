@@ -62,8 +62,8 @@ service Auth {
 
 // 登录接口请求参数
 message AuthLoginRequest{
-  // 登录手机号
-  string mobile = 1 [(buf.validate.field).string.min_len = 11, (google.api.field_behavior) = REQUIRED];
+  // 登录用户名
+  string username = 1 [(buf.validate.field).string.min_len = 1, (google.api.field_behavior) = REQUIRED];
   // 登录密码
   string password = 2 [(buf.validate.field).string.min_len = 1, (google.api.field_behavior) = REQUIRED];
   // 登录平台
