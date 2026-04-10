@@ -149,3 +149,7 @@ software/scripts/run-deploy.bat
 *.mp4
 pnpm-linux-x64
 
+# Root level PS1 scripts (ignored)
+*.ps1
+
+
