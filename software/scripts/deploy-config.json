@@ -1,0 +1,31 @@
+{
+    "server": {
+        "host": "192.168.23.131",
+        "port": 22,
+        "user": "root",
+        "auth": "key",
+        "keyPath": "~/.ssh/id_rsa",
+        "password": ""
+    },
+    "paths": {
+        "localProject": ".",
+        "remoteDeploy": "/var/www/lumenim",
+        "backupDir": "/var/lib/lumenim/backups"
+    },
+    "build": {
+        "buildBackend": true,
+        "buildFrontend": true,
+        "cleanBefore": true
+    },
+    "network": {
+        "bindIP": "192.168.23.131",
+        "domain": "mylumenim.cfldcn.com",
+        "apiPort": 9501,
+        "httpPort": 80
+    },
+    "git": {
+        "source": "github",
+        "repo": "wenming429/AIProject",
+        "branch": "main"
+    }
+}
