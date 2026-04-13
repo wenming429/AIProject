@@ -64,92 +64,10 @@ deploy-package/
 software/deploy-packages.sh
 
 # ==========================================
-# Backend runtime data (structure preserved)
+# Build artifacts (NOT source code)
 # ==========================================
-backend/data/im-private/
-backend/data/im-static/media/
-backend/lumenim
-backend/protoc-gen-bff
-backend/sql/init.sql
-
-# ==========================================
-# Offline packages
-# ==========================================
-docker-offline.tar.gz
-protoc.zip
-
-# ==========================================
-# Documentation files (keep in repo separately)
-# ==========================================
-LUMENIM_*.md
-PRODUCTION_*.md
-UDMOrganization__*.md
-docker_setup.md
-docs/*.md
-docs/*.txt
-software/*.md
-software/README.md
-
-# ==========================================
-# Download and build scripts
-# ==========================================
-software/scripts/*.ps1
-software/scripts/*.md
-software/scripts/BUILD_*.md
-software/scripts/DEPLOY_*.md
-software/scripts/Download-*.ps1
 software/offline/
 software/deploy-package/
-
-# ==========================================
-# Frontend additional files
-# ==========================================
-front/pnpm-workspace.yaml
-
-# ==========================================
-# Development files
-# ==========================================
-mini-login.html
-wechat-login.html
-
-# Download scripts
-software/download-dependencies.ps1
-software/scripts/download-*.sh
-software/scripts/install-*.sh
-software/scripts/init-server.sh
-software/scripts/verify-offline.sh
-software/scripts/configure-network.sh
-
-# Configuration files
-software/scripts/config.yaml
-software/scripts/config.deploy.json
-software/scripts/deploy-config.json
-software/scripts/docker-compose-*.yaml
-software/scripts/nginx.conf
-software/scripts/*.bat
-
-# Standalone deployment scripts
-software/scripts/deploy.sh
-software/scripts/deploy-ubuntu20.sh
-software/scripts/docker-deploy.sh
-software/scripts/quick-deploy.sh
-software/scripts/build-deploy.sh
-software/scripts/run-deploy.bat
-
-# Work files (图片、文档等)
-工作文件/
-*.jpg
-*.jpeg
-*.png
-*.svg
-*.docx
-*.doc
-*.wav
-*.mp3
-*.mp4
-pnpm-linux-x64
-
-# Root level PS1 scripts (ignored)
-*.ps1
+software/scripts/deploy-package/
 
 
