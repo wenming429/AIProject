@@ -17,9 +17,22 @@ export GOPROXY=https://goproxy.cn,direct
 export GOSUMDB=off
 export GOTOOLCHAIN=local
 
-# 进入后端目录
-cd "$(dirname "$0")/.."
-cd backend
+# 进入项目根目录
+SCRIPT_DIR="$(dirname "$0")"
+# 尝试多种可能的项目结构
+if [ -d "$SCRIPT_DIR/../../backend" ]; then
+    cd "$SCRIPT_DIR/../../backend"
+elif [ -d "$SCRIPT_DIR/../backend" ]; then
+    cd "$SCRIPT_DIR/../backend"
+elif [ -d "$SCRIPT_DIR/../../../backend" ]; then
+    cd "$SCRIPT_DIR/../../../backend"
+else
+    echo "错误: 找不到 backend 目录"
+    echo "脚本位置: $SCRIPT_DIR"
+    echo "当前目录: $(pwd)"
+    exit 1
+fi
+echo "工作目录: $(pwd)"
 
 echo ""
 echo "1. 备份原始 go.mod 和 go.sum"
