@@ -534,33 +534,67 @@ init_database() {
     service mysql start
     sleep 5
     
-    log_info "设置 MySQL root 密码..."
-    mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';" 2>/dev/null || true
+    # MySQL 8.0 on Ubuntu 20.04 使用 auth_socket 插件
+    # 需要先配置 root 用户使用密码认证
+    log_info "配置 MySQL root 用户密码认证..."
+    
+    # 方法1: 使用 sudo mysql（绕过 auth_socket，适用于首次配置）
+    if sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';" 2>/dev/null; then
+        log_info "Root 密码设置成功"
+    elif sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';" 2>/dev/null; then
+        log_info "Root 密码设置成功 (方式2)"
+    else
+        # 方法2: 如果 sudo 方式失败，尝试使用 auth_socket 直接操作
+        log_warn "尝试备用配置方式..."
+        sudo mysql << 'EOSQL'
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'lumenim123';
+EOSQL
+    fi
+    
+    sleep 2
     
     log_info "创建数据库和用户..."
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" << 'EOSQL'
-CREATE DATABASE IF NOT EXISTS go_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-CREATE USER IF NOT EXISTS 'lumenim'@'localhost' IDENTIFIED BY 'lumenim123';
-CREATE USER IF NOT EXISTS 'lumenim'@'%' IDENTIFIED BY 'lumenim123';
-GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'localhost';
-GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'%';
-FLUSH PRIVILEGES;
-EOSQL
-
-    # 如果上述命令失败，尝试不带密码的方式
-    mysql -u root << 'EOSQL' 2>/dev/null || true
-CREATE DATABASE IF NOT EXISTS go_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-CREATE USER IF NOT EXISTS 'lumenim'@'localhost' IDENTIFIED BY 'lumenim123';
-CREATE USER IF NOT EXISTS 'lumenim'@'%' IDENTIFIED BY 'lumenim123';
-GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'localhost';
-GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'%';
-FLUSH PRIVILEGES;
-EOSQL
     
+    # 使用 --login-path 或 stdin 方式传递密码（更可靠）
+    # 方式A: 使用 --password= 格式（推荐）
+    if mysql -u root --password="$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" &>/dev/null; then
+        log_info "使用密码认证连接成功"
+        
+        mysql -u root --password="$MYSQL_ROOT_PASSWORD" << EOSQL
+CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'localhost';
+GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
+FLUSH PRIVILEGES;
+EOSQL
+        MYSQL_AUTH_OK=true
+    else
+        # 方式B: 使用 sudo mysql（auth_socket 认证）
+        log_warn "密码认证失败，尝试 auth_socket 方式..."
+        
+        sudo mysql << 'EOSQL'
+CREATE DATABASE IF NOT EXISTS go_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE USER IF NOT EXISTS 'lumenim'@'localhost' IDENTIFIED BY 'lumenim123';
+CREATE USER IF NOT EXISTS 'lumenim'@'%' IDENTIFIED BY 'lumenim123';
+GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'localhost';
+GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'%';
+FLUSH PRIVILEGES;
+EOSQL
+        MYSQL_AUTH_OK=true
+    fi
+    
+    # 导入数据库表结构
     if [ -f "$PROJECT_DIR/backend/sql/init.sql" ]; then
         log_info "导入数据库表结构..."
-        mysql -u root -p"$MYSQL_ROOT_PASSWORD" go_chat < "$PROJECT_DIR/backend/sql/init.sql" 2>/dev/null || \
-        mysql -u root go_chat < "$PROJECT_DIR/backend/sql/init.sql"
+        
+        if [ "$MYSQL_AUTH_OK" = true ] && mysql -u root --password="$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" &>/dev/null; then
+            mysql -u root --password="$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < "$PROJECT_DIR/backend/sql/init.sql" && \
+            log_success "表结构导入成功"
+        else
+            sudo mysql "$MYSQL_DATABASE" < "$PROJECT_DIR/backend/sql/init.sql" && \
+            log_success "表结构导入成功 (sudo)"
+        fi
     fi
     
     log_info "启动 Redis..."
