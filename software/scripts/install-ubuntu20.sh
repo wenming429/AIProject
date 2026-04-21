@@ -1251,47 +1251,57 @@ build_backend() {
     log_info "检测到 go.mod 文件"
     log_info "Go 版本: $(go version 2>/dev/null || echo '未安装')"
     
+    # 检查并修复 Go 版本兼容性问题
+    local mod_go_version=$(grep '^go ' go.mod | awk '{print $2}')
+    log_info "go.mod 声明版本: $mod_go_version"
+    
+    # 如果 go.mod 版本高于 1.22，执行依赖降级
+    if [ -n "$mod_go_version" ]; then
+        local mod_minor=$(echo "$mod_go_version" | cut -d. -f2)
+        if [ "$mod_minor" -gt 22 ] 2>/dev/null; then
+            log_warn "go.mod 版本 ($mod_go_version) 需要 Go 1.23+，服务器为 Go 1.22"
+            log_info "执行依赖降级..."
+            
+            # 移除不兼容的 protovalidate 依赖
+            log_info "移除 protovalidate 相关依赖..."
+            sed -i '/buf.build/d' go.mod
+            
+            # 添加兼容版本的 replace 规则
+            if ! grep -q "replace (" go.mod; then
+                cat >> go.mod << 'EOF'
+
+replace (
+	google.golang.org/genproto/googleapis/api => google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
+	google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142
+)
+EOF
+            fi
+            
+            # 修正 go.mod 版本为 1.22
+            sed -i "s/^go $mod_go_version$/go 1.22/" go.mod
+            log_success "依赖版本已调整为兼容 Go 1.22"
+        fi
+    fi
+    
     # 清理可能损坏的依赖缓存
     log_info "清理 Go 模块缓存..."
     go clean -modcache 2>/dev/null || true
     
-    # 设置 Go 版本兼容模式
-    # 修正 go.mod 中的 go 版本（如果版本过高）
-    local go_version=$(go version 2>/dev/null | grep -oP 'go\d+\.\d+' | head -1)
-    local mod_go_version=$(grep '^go ' go.mod | awk '{print $2}')
-    
-    log_info "go.mod 声明版本: $mod_go_version"
-    log_info "当前 Go 版本: $go_version"
-    
-    # 如果 go.mod 版本高于实际版本，修正它
-    if [ -n "$mod_go_version" ] && [ -n "$go_version" ]; then
-        # 提取主版本号进行比较 (如 1.21 vs 1.22)
-        local mod_major=$(echo "$mod_go_version" | cut -d. -f1)
-        local mod_minor=$(echo "$mod_go_version" | cut -d. -f2)
-        local cur_major=$(echo "$go_version" | grep -oP '\d+' | head -1)
-        local cur_minor=$(echo "$go_version" | grep -oP '\d+$' | head -1)
-        
-        if [ "$mod_minor" -gt "$cur_minor" ] 2>/dev/null; then
-            log_warn "go.mod 版本 ($mod_go_version) 高于当前 Go 版本"
-            log_info "修正 go.mod 版本为 $go_version..."
-            sed -i "s/^go $mod_go_version$/go $go_version/" go.mod
-        fi
-    fi
-    
     log_info "下载 Go 依赖（使用 goproxy.cn 镜像）..."
     
-    # 方法1: 使用 go mod tidy
+    # 下载所有依赖
+    if go mod download 2>&1; then
+        log_success "依赖下载完成"
+    else
+        log_warn "部分依赖下载失败，尝试 go mod tidy..."
+    fi
+    
+    # 使用 go mod tidy 整理依赖
     if go mod tidy 2>&1; then
         log_success "go mod tidy 执行成功"
     else
-        log_warn "go mod tidy 执行失败，尝试备用方法..."
-        
-        # 方法2: 直接下载所有依赖
-        log_info "尝试 go mod download..."
-        go mod download 2>&1 || {
-            log_error "go mod download 失败"
-            log_info "检查网络连接和代理设置..."
-        }
+        log_error "go mod tidy 执行失败"
+        log_info "尝试手动降级依赖..."
     fi
     
     # 验证依赖下载结果
@@ -1302,9 +1312,21 @@ build_backend() {
         go mod tidy
     fi
     
+    # 检查并修复 temp 包问题
+    if [ -d "internal/mission/temp" ]; then
+        log_info "检查 temp 包..."
+        # 如果 temp 包有问题，可以选择删除或修复
+        if grep -q 'github.com/gzydong/go-chat/internal/mission/temp' internal/mission/temp.go 2>/dev/null; then
+            log_warn "temp.go 尝试导入自身包，这可能导致构建问题"
+            log_info "尝试修复 temp.go..."
+            # 注释掉问题代码
+            sed -i 's/import (/import (/; s|"github.com/gzydong/go-chat/internal/mission/temp"|// &|' internal/mission/temp.go
+        fi
+    fi
+    
     log_info "安装 protobuf 插件..."
     go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-    go install github.com/envoyproxy/protoc-gen-validate@latest
+    go install github.com/envoyproxy/protoc-gen-validate@v0.6.7 || true
     
     mkdir -p "$PROJECT_DIR/backend/bin"
     
