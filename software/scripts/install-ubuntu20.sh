@@ -535,7 +535,17 @@ init_database() {
     mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';" 2>/dev/null || true
     
     log_info "创建数据库和用户..."
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" << 'EOSQL' 2>/dev/null || mysql -u root << 'EOSQL'
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" << 'EOSQL'
+CREATE DATABASE IF NOT EXISTS go_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE USER IF NOT EXISTS 'lumenim'@'localhost' IDENTIFIED BY 'lumenim123';
+CREATE USER IF NOT EXISTS 'lumenim'@'%' IDENTIFIED BY 'lumenim123';
+GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'localhost';
+GRANT ALL PRIVILEGES ON go_chat.* TO 'lumenim'@'%';
+FLUSH PRIVILEGES;
+EOSQL
+
+    # 如果上述命令失败，尝试不带密码的方式
+    mysql -u root << 'EOSQL' 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS go_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE USER IF NOT EXISTS 'lumenim'@'localhost' IDENTIFIED BY 'lumenim123';
 CREATE USER IF NOT EXISTS 'lumenim'@'%' IDENTIFIED BY 'lumenim123';
