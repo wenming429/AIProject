@@ -197,6 +197,9 @@ echo "修复依赖版本问题..."
 sed -i 's/filipio\.io/filippo.io/g' go.mod
 sed -i 's/filipio\.io/filippo.io/g' go.sum
 
+# 降级 gin-contrib/sse 到兼容 Go 1.22 的版本 (v0.1.0)
+sed -i 's/github.com\/gin-contrib\/sse v1.1.0/github.com\/gin-contrib\/sse v0.1.0/g' go.mod
+
 # 移除 google.golang.org/genproto 相关的 require 行
 sed -i '/google.golang.org\/genproto\/googleapis\/api/d' go.mod
 sed -i '/google.golang.org\/genproto\/googleapis\/rpc/d' go.mod
@@ -218,6 +221,7 @@ else
     cat >> go.mod << 'EOF'
 
 replace (
+	github.com/gin-contrib/sse => github.com/gin-contrib/sse v0.1.0
 	google.golang.org/genproto/googleapis/api => google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
