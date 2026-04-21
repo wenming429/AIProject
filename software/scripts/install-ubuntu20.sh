@@ -1199,7 +1199,10 @@ build_backend() {
     
     export GOROOT=/usr/local/go
     export PATH=$PATH:$GOROOT/bin
+    
+    # 设置 Go 模块代理（优先使用国内镜像）
     export GOPROXY=https://goproxy.cn,direct
+    export GOSUMDB=off  # 关闭 GOSUMDB 检查，加速下载
     
     # 诊断：检查项目目录状态
     log_info "=== 构建环境诊断 ==="
@@ -1248,9 +1251,56 @@ build_backend() {
     log_info "检测到 go.mod 文件"
     log_info "Go 版本: $(go version 2>/dev/null || echo '未安装')"
     
-    log_info "下载 Go 依赖..."
-    # 使用 go mod tidy 自动整理并下载依赖（兼容 Go 1.22+）
-    go mod tidy
+    # 清理可能损坏的依赖缓存
+    log_info "清理 Go 模块缓存..."
+    go clean -modcache 2>/dev/null || true
+    
+    # 设置 Go 版本兼容模式
+    # 修正 go.mod 中的 go 版本（如果版本过高）
+    local go_version=$(go version 2>/dev/null | grep -oP 'go\d+\.\d+' | head -1)
+    local mod_go_version=$(grep '^go ' go.mod | awk '{print $2}')
+    
+    log_info "go.mod 声明版本: $mod_go_version"
+    log_info "当前 Go 版本: $go_version"
+    
+    # 如果 go.mod 版本高于实际版本，修正它
+    if [ -n "$mod_go_version" ] && [ -n "$go_version" ]; then
+        # 提取主版本号进行比较 (如 1.21 vs 1.22)
+        local mod_major=$(echo "$mod_go_version" | cut -d. -f1)
+        local mod_minor=$(echo "$mod_go_version" | cut -d. -f2)
+        local cur_major=$(echo "$go_version" | grep -oP '\d+' | head -1)
+        local cur_minor=$(echo "$go_version" | grep -oP '\d+$' | head -1)
+        
+        if [ "$mod_minor" -gt "$cur_minor" ] 2>/dev/null; then
+            log_warn "go.mod 版本 ($mod_go_version) 高于当前 Go 版本"
+            log_info "修正 go.mod 版本为 $go_version..."
+            sed -i "s/^go $mod_go_version$/go $go_version/" go.mod
+        fi
+    fi
+    
+    log_info "下载 Go 依赖（使用 goproxy.cn 镜像）..."
+    
+    # 方法1: 使用 go mod tidy
+    if go mod tidy 2>&1; then
+        log_success "go mod tidy 执行成功"
+    else
+        log_warn "go mod tidy 执行失败，尝试备用方法..."
+        
+        # 方法2: 直接下载所有依赖
+        log_info "尝试 go mod download..."
+        go mod download 2>&1 || {
+            log_error "go mod download 失败"
+            log_info "检查网络连接和代理设置..."
+        }
+    fi
+    
+    # 验证依赖下载结果
+    log_info "验证依赖..."
+    if [ ! -f "go.sum" ] || [ ! -s "go.sum" ]; then
+        log_warn "go.sum 文件缺失或为空"
+        log_info "重新生成 go.sum..."
+        go mod tidy
+    fi
     
     log_info "安装 protobuf 插件..."
     go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
@@ -1259,7 +1309,22 @@ build_backend() {
     mkdir -p "$PROJECT_DIR/backend/bin"
     
     log_info "编译后端..."
-    go build -o bin/lumenim .
+    # 使用 -mod=mod 强制使用 go.mod 中的版本
+    if go build -mod=mod -o bin/lumenim . 2>&1; then
+        log_success "后端编译成功！"
+    else
+        log_error "后端编译失败"
+        echo ""
+        echo "常见问题排查:"
+        echo "1. 检查依赖下载是否完整: go mod download"
+        echo "2. 清理缓存后重试: go clean -modcache && go mod tidy"
+        echo "3. 检查网络代理设置: export GOPROXY=https://goproxy.cn,direct"
+        echo "4. 尝试 GOPROXY 镜像:"
+        echo "   - 阿里云: https://mirrors.aliyun.com/goproxy/"
+        echo "   - 七牛云: https://goproxy.cn,direct"
+        echo "   - goproxy.io: https://goproxy.io,direct"
+        return 1
+    fi
     
     chown "$RUN_USER:$RUN_USER" "$PROJECT_DIR/backend/bin/lumenim"
     log_success "后端构建完成"
