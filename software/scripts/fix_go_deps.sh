@@ -37,7 +37,6 @@ find_go_binary() {
     # 1. 首先检查 PATH 中的 go
     if command -v go &>/dev/null; then
         go_path="$(command -v go)"
-        echo "PATH 中的 Go: $go_path"
         echo "$go_path"
         return 0
     fi
@@ -45,7 +44,6 @@ find_go_binary() {
     # 2. 检查常见安装位置
     for path in "${go_paths[@]}"; do
         if [ -x "$path" ]; then
-            echo "找到 Go: $path"
             echo "$path"
             return 0
         fi
@@ -55,7 +53,6 @@ find_go_binary() {
     if command -v which &>/dev/null; then
         go_path="$(which go 2>/dev/null || true)"
         if [ -n "$go_path" ] && [ -x "$go_path" ]; then
-            echo "which 找到 Go: $go_path"
             echo "$go_path"
             return 0
         fi
@@ -68,10 +65,10 @@ find_go_binary() {
 # 函数: 获取 Go 环境变量
 # ============================================
 setup_go_env() {
-    local go_bin_dir=""
+    local go_bin_path=""
 
     # 获取 Go 二进制文件路径
-    GO_BINARY="$(find_go_binary)" || {
+    go_bin_path="$(find_go_binary)" || {
         echo ""
         echo "错误: 找不到 Go 可执行文件！"
         echo ""
@@ -85,6 +82,8 @@ setup_go_env() {
         exit 1
     }
 
+    GO_BINARY="$go_bin_path"
+
     # 获取 Go 目录
     GO_DIR="$(dirname "$(dirname "$GO_BINARY")")"
     export GOROOT="${GO_DIR}"
@@ -94,27 +93,43 @@ setup_go_env() {
     echo "Go 环境配置:"
     echo "  GO_BINARY: $GO_BINARY"
     echo "  GOROOT: $GOROOT"
-    echo "  PATH (前): $(echo $PATH | cut -d: -f1-3)"
+    echo "  PATH: ${GO_DIR}/bin:..."
 }
 
 # ============================================
 # 函数: 检查 Go 版本
 # ============================================
 check_go_version() {
-    local min_version="1.22"
-    local current_version
+    local min_major=1
+    local min_minor=22
+    local version_output
+    local current_major=0
+    local current_minor=0
 
     echo ""
     echo "检查 Go 版本..."
 
-    current_version=$("$GO_BINARY" version 2>&1 | grep -oP 'go\d+\.\d+' | grep -oP '\d+\.\d+' || echo "0")
+    version_output=$("$GO_BINARY" version 2>&1) || {
+        echo "错误: 无法执行 go version"
+        echo "输出: $version_output"
+        exit 1
+    }
 
-    if [ "$(echo "$current_version < $min_version" | bc 2>/dev/null || echo "1")" = "1" ]; then
-        echo "警告: 当前 Go 版本 $current_version 低于要求的 $min_version"
-        echo "某些依赖可能不兼容"
+    echo "$version_output"
+
+    # 解析版本号
+    if echo "$version_output" | grep -qE 'go([0-9]+)\.([0-9]+)'; then
+        current_major=$(echo "$version_output" | grep -oE 'go([0-9]+)\.([0-9]+)' | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f1)
+        current_minor=$(echo "$version_output" | grep -oE 'go([0-9]+)\.([0-9]+)' | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f2)
     fi
 
-    "$GO_BINARY" version
+    echo ""
+    echo "解析版本: $current_major.$current_minor (需要 >= 1.22)"
+
+    # 版本比较
+    if [ "$current_major" -lt "$min_major" ] || { [ "$current_major" -eq "$min_major" ] && [ "$current_minor" -lt "$min_minor" ]; }; then
+        echo "警告: 当前 Go 版本低于要求的 1.22，某些依赖可能不兼容"
+    fi
 }
 
 # ============================================
