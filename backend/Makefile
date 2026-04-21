@@ -1,3 +1,7 @@
+# 构建目标平台配置
+GOOS ?= linux
+GOARCH ?= amd64
+
 PROTO_FILES := $(shell find api -name *.proto)
 
 .PHONY: install
@@ -27,7 +31,18 @@ run:
 
 .PHONY: build
 build:
-	go build -o ./bin/lumenim ./cmd/lumenim
+	@echo "Building for $(GOOS)/$(GOARCH)..."
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ./bin/lumenim ./cmd/lumenim
+
+# 交叉编译 Linux amd64
+.PHONY: build-linux-amd64
+build-linux-amd64:
+	$(MAKE) build GOOS=linux GOARCH=amd64
+
+# 交叉编译 Linux arm64
+.PHONY: build-linux-arm64
+build-linux-arm64:
+	$(MAKE) build GOOS=linux GOARCH=arm64
 
 .PHONY: protoc-gen-bff
 protoc-gen-bff:

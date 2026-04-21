@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Go 依赖修复脚本
-# 用于解决 Go 1.22 环境下的依赖版本兼容问题
+# Go 依赖修复/更新脚本
+# 用于更新 Go 1.25+ 项目的依赖版本
 #
 # 使用方法: sudo ./fix_go_deps.sh
 #
@@ -9,10 +9,10 @@
 set -e
 
 echo "========================================"
-echo "  Go 依赖修复脚本"
+echo "  Go 依赖更新脚本 (Go 1.25+)"
 echo "========================================"
 
-# 设置 Go 代理（即使 Go 不在 PATH 中也要设置）
+# 设置 Go 代理
 export GOPROXY=https://goproxy.cn,direct
 export GOSUMDB=off
 export GOTOOLCHAIN=local
@@ -22,8 +22,6 @@ export GOTOOLCHAIN=local
 # ============================================
 find_go_binary() {
     local go_path=""
-
-    # 常见 Go 安装位置（按优先级排序）
     local go_paths=(
         "/usr/local/go/bin/go"
         "/usr/go/bin/go"
@@ -34,14 +32,12 @@ find_go_binary() {
         "/opt/go/bin/go"
     )
 
-    # 1. 首先检查 PATH 中的 go
     if command -v go &>/dev/null; then
         go_path="$(command -v go)"
         echo "$go_path"
         return 0
     fi
 
-    # 2. 检查常见安装位置
     for path in "${go_paths[@]}"; do
         if [ -x "$path" ]; then
             echo "$path"
@@ -49,7 +45,6 @@ find_go_binary() {
         fi
     done
 
-    # 3. 使用 which 查找（sudo 环境）
     if command -v which &>/dev/null; then
         go_path="$(which go 2>/dev/null || true)"
         if [ -n "$go_path" ] && [ -x "$go_path" ]; then
@@ -67,24 +62,21 @@ find_go_binary() {
 setup_go_env() {
     local go_bin_path=""
 
-    # 获取 Go 二进制文件路径
     go_bin_path="$(find_go_binary)" || {
         echo ""
         echo "错误: 找不到 Go 可执行文件！"
         echo ""
         echo "请先安装 Go 或将 Go 添加到 PATH 中。"
         echo ""
-        echo "安装 Go 1.22:"
-        echo "  wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz"
-        echo "  sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz"
+        echo "安装 Go 1.25:"
+        echo "  wget https://go.dev/dl/go1.25.7.linux-amd64.tar.gz"
+        echo "  sudo tar -C /usr/local -xzf go1.25.7.linux-amd64.tar.gz"
         echo "  echo 'export PATH=\$PATH:/usr/local/go/bin' >> ~/.bashrc"
         echo "  source ~/.bashrc"
         exit 1
     }
 
     GO_BINARY="$go_bin_path"
-
-    # 获取 Go 目录
     GO_DIR="$(dirname "$(dirname "$GO_BINARY")")"
     export GOROOT="${GO_DIR}"
     export PATH="${GO_DIR}/bin:${PATH}"
@@ -111,24 +103,22 @@ check_go_version() {
 
     version_output=$("$GO_BINARY" version 2>&1) || {
         echo "错误: 无法执行 go version"
-        echo "输出: $version_output"
         exit 1
     }
 
     echo "$version_output"
 
-    # 解析版本号
     if echo "$version_output" | grep -qE 'go([0-9]+)\.([0-9]+)'; then
         current_major=$(echo "$version_output" | grep -oE 'go([0-9]+)\.([0-9]+)' | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f1)
         current_minor=$(echo "$version_output" | grep -oE 'go([0-9]+)\.([0-9]+)' | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f2)
     fi
 
     echo ""
-    echo "解析版本: $current_major.$current_minor (需要 >= 1.22)"
+    echo "检测到版本: $current_major.$current_minor"
 
-    # 版本比较
-    if [ "$current_major" -lt "$min_major" ] || { [ "$current_major" -eq "$min_major" ] && [ "$current_minor" -lt "$min_minor" ]; }; then
-        echo "警告: 当前 Go 版本低于要求的 1.22，某些依赖可能不兼容"
+    # 对于 Go 1.25+，我们只需要确保版本足够新
+    if [ "$current_major" -lt 1 ] || { [ "$current_major" -eq 1 ] && [ "$current_minor" -lt 22 ]; }; then
+        echo "警告: 当前 Go 版本低于 1.22，建议升级到 Go 1.25+"
     fi
 }
 
@@ -153,10 +143,6 @@ find_backend_dir() {
     done
 
     echo "错误: 找不到包含 go.mod 的 backend 目录"
-    echo "已检查路径:"
-    for path in "${possible_paths[@]}"; do
-        echo "  - $path"
-    done
     exit 1
 }
 
@@ -170,7 +156,7 @@ setup_go_env
 # 2. 检查 Go 版本
 check_go_version
 
-# 3. 备份原始 go.mod 和 go.sum
+# 3. 备份原始文件
 echo ""
 echo "备份原始 go.mod 和 go.sum..."
 
@@ -189,61 +175,35 @@ if [ -f go.sum ]; then
     echo "  已备份: go.sum -> go.sum.backup"
 fi
 
-# 4. 修复依赖版本问题
+# 4. 清理旧的不兼容 replace 规则
 echo ""
-echo "修复依赖版本问题..."
+echo "清理旧的不兼容配置..."
 
-# 修复域名拼写错误: filipio.io -> filippo.io
+# 移除旧的 Go 1.22 兼容性 replace 规则
+sed -i '/^replace ($/,/^)$/d' go.mod 2>/dev/null || true
+
+# 移除重复的空行（如果有）
+sed -i '/^$/N;/^\n$/d' go.mod 2>/dev/null || true
+
+# 修复 filipio.io 拼写错误
 sed -i 's/filipio\.io/filippo.io/g' go.mod
 sed -i 's/filipio\.io/filippo.io/g' go.sum
 
-# 降级 gin-contrib/sse 到兼容 Go 1.22 的版本 (v0.1.0)
-sed -i 's/github.com\/gin-contrib\/sse v1.1.0/github.com\/gin-contrib\/sse v0.1.0/g' go.mod
+echo "  已清理旧配置"
 
-# 移除 google.golang.org/genproto 相关的 require 行
-sed -i '/google.golang.org\/genproto\/googleapis\/api/d' go.mod
-sed -i '/google.golang.org\/genproto\/googleapis\/rpc/d' go.mod
-
-# 移除 buf.build 相关依赖
-sed -i '/buf.build\/gen\/go\/bufbuild/d' go.mod
-sed -i '/buf.build\/go\/protovalidate/d' go.mod
-
-echo "  已修复依赖版本"
-
-# 5. 添加兼容 Go 1.22 的 replace 规则
+# 5. 重新生成依赖
 echo ""
-echo "添加兼容 Go 1.22 的依赖版本..."
-
-# 检查是否已存在 replace 块
-if grep -q "^replace" go.mod; then
-    echo "  replace 块已存在，跳过添加"
-else
-    cat >> go.mod << 'EOF'
-
-replace (
-	github.com/gin-contrib/sse => github.com/gin-contrib/sse v0.1.0
-	google.golang.org/genproto/googleapis/api => google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
-	google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142
-	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
-)
-EOF
-    echo "  已添加 replace 块"
-fi
-
-# 6. 清理并重新下载依赖
-echo ""
-echo "清理并重新下载依赖..."
-"$GO_BINARY" clean -modcache 2>/dev/null || true
+echo "重新生成依赖..."
 "$GO_BINARY" mod tidy
 
-# 7. 验证依赖
+# 6. 验证依赖
 echo ""
 echo "验证依赖..."
 "$GO_BINARY" mod verify
 
 echo ""
 echo "========================================"
-echo "  依赖修复完成！"
+echo "  依赖更新完成！"
 echo "========================================"
 echo ""
 echo "如果仍有问题，可以回滚："
