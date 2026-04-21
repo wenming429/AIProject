@@ -633,12 +633,30 @@ clone_repository() {
     log_step "克隆代码仓库..."
     
     if [ -d "$PROJECT_DIR" ]; then
-        log_warn "项目目录已存在: $PROJECT_DIR"
-        read -p "是否更新代码? (y/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            cd "$PROJECT_DIR"
-            git pull origin master
+        # 检查是否是 Git 仓库
+        if [ -d "$PROJECT_DIR/.git" ] || git -C "$PROJECT_DIR" rev-parse --git-dir &>/dev/null; then
+            log_warn "项目目录已存在且是 Git 仓库: $PROJECT_DIR"
+            read -p "是否更新代码? (y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                cd "$PROJECT_DIR"
+                git pull origin master
+                log_success "代码更新完成"
+            fi
+        else
+            log_warn "项目目录已存在但不是 Git 仓库: $PROJECT_DIR"
+            read -p "是否删除并重新克隆? (y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                log_info "删除旧目录..."
+                rm -rf "$PROJECT_DIR"
+                log_info "克隆代码仓库: $GIT_REPO"
+                git clone "$GIT_REPO" "$PROJECT_DIR"
+                chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
+                log_success "代码克隆完成"
+            else
+                log_info "跳过代码克隆，使用现有目录"
+            fi
         fi
         return 0
     fi
