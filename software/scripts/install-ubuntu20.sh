@@ -1129,8 +1129,15 @@ build_backend() {
     
     cd "$PROJECT_DIR/backend"
     
+    # 检查 go.mod 是否存在
+    if [ ! -f "go.mod" ]; then
+        log_error "go.mod 文件不存在，请确保代码完整克隆"
+        return 1
+    fi
+    
     log_info "下载 Go 依赖..."
-    go mod download
+    # 使用 go mod tidy 自动整理并下载依赖（兼容 Go 1.22+）
+    go mod tidy
     
     log_info "安装 protobuf 插件..."
     go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
