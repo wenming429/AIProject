@@ -23,6 +23,9 @@ SERVER_IP="192.168.23.131"
 # 代码仓库地址
 GIT_REPO="https://github.com/wenming429/AIProject.git"
 
+# Git 分支（默认为 master）
+GIT_BRANCH="master"
+
 # 安装根目录
 INSTALL_ROOT="/opt/lumenim"
 
@@ -657,11 +660,12 @@ clone_repository() {
                 log_info "删除旧目录..."
                 rm -rf "$PROJECT_DIR"
                 log_info "克隆代码仓库..."
-                git clone "$GIT_REPO" "$PROJECT_DIR" || {
+                git clone -b "$GIT_BRANCH" --single-branch "$GIT_REPO" "$PROJECT_DIR" || {
                     log_error "克隆失败，请检查:"
                     log_error "  1. 仓库地址是否正确"
                     log_error "  2. 网络连接是否正常"
                     log_error "  3. 仓库是否公开或访问权限"
+                    log_error "  4. 分支 '$GIT_BRANCH' 是否存在"
                     return 1
                 }
                 chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
@@ -672,15 +676,17 @@ clone_repository() {
         fi
     else
         log_info "开始克隆代码仓库..."
-        git clone "$GIT_REPO" "$PROJECT_DIR" || {
+        log_info "分支: $GIT_BRANCH"
+        git clone -b "$GIT_BRANCH" --single-branch "$GIT_REPO" "$PROJECT_DIR" || {
             log_error "克隆失败，请检查:"
             log_error "  1. 仓库地址是否正确: $GIT_REPO"
             log_error "  2. 网络连接是否正常"
             log_error "  3. 仓库是否公开或访问权限"
+            log_error "  4. 分支 '$GIT_BRANCH' 是否存在"
             echo ""
             echo "如果是私有仓库，请先配置 Git 凭据:"
             echo "  git config --global credential.helper store"
-            echo "  git clone $GIT_REPO"
+            echo "  git clone -b $GIT_BRANCH --single-branch $GIT_REPO"
             return 1
         }
         chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
