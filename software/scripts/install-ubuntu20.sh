@@ -632,6 +632,9 @@ create_deploy_user() {
 clone_repository() {
     log_step "克隆代码仓库..."
     
+    log_info "仓库地址: $GIT_REPO"
+    log_info "目标目录: $PROJECT_DIR"
+    
     if [ -d "$PROJECT_DIR" ]; then
         # 检查是否是 Git 仓库
         if [ -d "$PROJECT_DIR/.git" ] || git -C "$PROJECT_DIR" rev-parse --git-dir &>/dev/null; then
@@ -640,8 +643,11 @@ clone_repository() {
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 cd "$PROJECT_DIR"
+                log_info "执行 git pull origin master..."
                 git pull origin master
                 log_success "代码更新完成"
+            else
+                log_info "跳过代码更新"
             fi
         else
             log_warn "项目目录已存在但不是 Git 仓库: $PROJECT_DIR"
@@ -650,21 +656,49 @@ clone_repository() {
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 log_info "删除旧目录..."
                 rm -rf "$PROJECT_DIR"
-                log_info "克隆代码仓库: $GIT_REPO"
-                git clone "$GIT_REPO" "$PROJECT_DIR"
+                log_info "克隆代码仓库..."
+                git clone "$GIT_REPO" "$PROJECT_DIR" || {
+                    log_error "克隆失败，请检查:"
+                    log_error "  1. 仓库地址是否正确"
+                    log_error "  2. 网络连接是否正常"
+                    log_error "  3. 仓库是否公开或访问权限"
+                    return 1
+                }
                 chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
                 log_success "代码克隆完成"
             else
                 log_info "跳过代码克隆，使用现有目录"
             fi
         fi
-        return 0
+    else
+        log_info "开始克隆代码仓库..."
+        git clone "$GIT_REPO" "$PROJECT_DIR" || {
+            log_error "克隆失败，请检查:"
+            log_error "  1. 仓库地址是否正确: $GIT_REPO"
+            log_error "  2. 网络连接是否正常"
+            log_error "  3. 仓库是否公开或访问权限"
+            echo ""
+            echo "如果是私有仓库，请先配置 Git 凭据:"
+            echo "  git config --global credential.helper store"
+            echo "  git clone $GIT_REPO"
+            return 1
+        }
+        chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
+        log_success "代码克隆完成"
     fi
     
-    log_info "克隆代码仓库: $GIT_REPO"
-    git clone "$GIT_REPO" "$PROJECT_DIR"
-    chown -R "$RUN_USER:$RUN_USER" "$PROJECT_DIR"
-    log_success "代码克隆完成"
+    # 验证克隆结果
+    log_info "验证仓库内容..."
+    if [ -f "$PROJECT_DIR/backend/go.mod" ]; then
+        log_success "go.mod 文件验证通过"
+    else
+        log_error "go.mod 文件不存在，克隆可能不完整"
+        log_error "请检查仓库是否包含 backend 目录"
+        echo ""
+        echo "当前仓库结构:"
+        find "$PROJECT_DIR" -maxdepth 2 -type d 2>/dev/null | head -20
+        return 1
+    fi
 }
 
 # ============================================================
@@ -1127,13 +1161,52 @@ build_backend() {
     export PATH=$PATH:$GOROOT/bin
     export GOPROXY=https://goproxy.cn,direct
     
+    # 诊断：检查项目目录状态
+    log_info "=== 构建环境诊断 ==="
+    log_info "项目目录: $PROJECT_DIR"
+    log_info "后端目录: $PROJECT_DIR/backend"
+    
+    # 检查项目目录是否存在
+    if [ ! -d "$PROJECT_DIR" ]; then
+        log_error "项目目录不存在: $PROJECT_DIR"
+        log_error "请先执行 --clone 选项克隆代码仓库"
+        echo ""
+        echo "正确执行顺序:"
+        echo "  sudo ./install-ubuntu20.sh --clone    # 第1步: 克隆代码"
+        echo "  sudo ./install-ubuntu20.sh --backend  # 第2步: 构建后端"
+        return 1
+    fi
+    
+    # 检查 backend 目录是否存在
+    if [ ! -d "$PROJECT_DIR/backend" ]; then
+        log_error "后端目录不存在: $PROJECT_DIR/backend"
+        log_error "仓库克隆可能不完整，请重新克隆"
+        echo ""
+        echo "检查仓库内容:"
+        ls -la "$PROJECT_DIR" 2>/dev/null || echo "无法访问目录"
+        return 1
+    fi
+    
+    # 切换到后端目录
     cd "$PROJECT_DIR/backend"
     
     # 检查 go.mod 是否存在
     if [ ! -f "go.mod" ]; then
-        log_error "go.mod 文件不存在，请确保代码完整克隆"
+        log_error "go.mod 文件不存在"
+        log_error "请检查仓库地址是否正确: $GIT_REPO"
+        echo ""
+        echo "当前 backend 目录内容:"
+        ls -la "$PROJECT_DIR/backend" 2>/dev/null | head -20
+        echo ""
+        echo "可能的原因:"
+        echo "  1. Git 仓库地址错误: $GIT_REPO"
+        echo "  2. 仓库克隆不完整"
+        echo "  3. 使用了错误的分支"
         return 1
     fi
+    
+    log_info "检测到 go.mod 文件"
+    log_info "Go 版本: $(go version 2>/dev/null || echo '未安装')"
     
     log_info "下载 Go 依赖..."
     # 使用 go mod tidy 自动整理并下载依赖（兼容 Go 1.22+）
@@ -1150,6 +1223,7 @@ build_backend() {
     
     chown "$RUN_USER:$RUN_USER" "$PROJECT_DIR/backend/bin/lumenim"
     log_success "后端构建完成"
+    log_info "可执行文件: $PROJECT_DIR/backend/bin/lumenim"
 }
 
 # ============================================================
