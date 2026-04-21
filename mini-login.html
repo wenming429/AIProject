@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumenIM 登录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      width: 320px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    /* 头部 */
+    .header {
+      background: linear-gradient(90deg, #07c160 0%, #06ad56 100%);
+      padding: 24px 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .app-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .app-version {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    /* 主体内容 */
+    .main-content {
+      padding: 28px 24px 32px;
+    }
+
+    /* 头像 */
+    .avatar-section {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 3px solid #fff;
+    }
+
+    /* 输入框 */
+    .input-section {
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    .input-field {
+      width: 100%;
+      height: 44px;
+      padding: 0 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #333;
+      background: #f8f8f8;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .input-field::placeholder {
+      color: #999;
+    }
+
+    .input-field:focus {
+      border-color: #07c160;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(7, 193, 96, 0.1);
+    }
+
+    /* 登录按钮 */
+    .login-btn {
+      width: 100%;
+      height: 44px;
+      background: linear-gradient(90deg, #07c160 0%, #06ad56 100%);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(7, 193, 96, 0.3);
+    }
+
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 快速登录 */
+    .quick-login {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .quick-title {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .quick-accounts {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .quick-account {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #f5f5f5;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+      transition: all 0.2s;
+    }
+
+    .quick-account:hover {
+      background: #07c160;
+      color: #fff;
+    }
+
+    /* 底部链接 */
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+      gap: 16px;
+    }
+
+    .footer-link {
+      font-size: 12px;
+      color: #07c160;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 消息提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: #07c160;
+    }
+
+    .toast.error {
+      background: #ee4444;
+    }
+
+    /* 加载动画 */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 360px) {
+      .login-container {
+        width: 100%;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <!-- 头部 -->
+    <div class="header">
+      <div class="app-name">
+        <span>💬</span>
+        <span>LumenIM</span>
+      </div>
+      <div class="app-version">企业即时通讯</div>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="main-content">
+      <!-- 头像 -->
+      <div class="avatar-section">
+        <img src="https://picsum.photos/seed/lumenim/200/200" alt="头像" class="avatar" id="avatar">
+      </div>
+
+      <!-- 输入框 -->
+      <div class="input-section">
+        <div class="input-group">
+          <input type="text" class="input-field" id="username" placeholder="请输入用户名" autocomplete="username">
+        </div>
+        <div class="input-group">
+          <input type="password" class="input-field" id="password" placeholder="请输入密码" autocomplete="current-password">
+        </div>
+      </div>
+
+      <!-- 登录按钮 -->
+      <button class="login-btn" id="loginBtn" onclick="handleLogin()">登录</button>
+
+      <!-- 快速登录 -->
+      <div class="quick-login">
+        <div class="quick-title">快速登录（仅测试）</div>
+        <div class="quick-accounts">
+          <div class="quick-account" onclick="quickLogin('wangwenxue', 'admin123')">
+            <span>👤</span>
+            <span>王文学</span>
+          </div>
+          <div class="quick-account" onclick="quickLogin('chengtao', 'admin123')">
+            <span>👤</span>
+            <span>程涛</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部链接 -->
+      <div class="footer-links">
+        <span class="footer-link">找回密码</span>
+        <span class="footer-link">注册账号</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示消息 -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+  <script>
+    const API_BASE = 'http://127.0.0.1:9501/api/v1';
+    let isLoggingIn = false;
+
+    // RSA 加密函数
+    function rsaEncrypt(password) {
+      const publicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1JqqxPLNWEy371X+kOXq
+wE8fMebohqHI9txXRoUIh28dYsrv85JTrknLlPcYWT5Q27nHGcywu8hpsjMwe1U2
+akHikIzLYEu/8GaGqI7qHa+73F54lVKHBcwdK8PjH8+o76kN9MsouJ8QA7Nk0g4u
+6equEzyrchwjr/bOjP4MhPt4hU90jpQbp3tqDu6PQgPQZzxDtIX9TeqzplCAYNy2
+M4i1HtbZk2a9vimFqTsM8i+ALPH47c+Bt4b4mLoKqSyF6K1muhV/kqfecV8fvyfN
+bkJdUkWQnNvgTX0f1nhAshArLMw4VyROrYBAamFgtzwRpC4qCYhBzWqyhb10bEEf
+XwIDAQAB
+-----END PUBLIC KEY-----`;
+
+      const encrypt = new JSEncrypt();
+      encrypt.setPublicKey(publicKey);
+      return encrypt.encrypt(password);
+    }
+
+    // 显示提示消息
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 2500);
+    }
+
+    // 登录处理
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const loginBtn = document.getElementById('loginBtn');
+
+      if (!username || !password) {
+        showToast('请输入用户名和密码', 'error');
+        return;
+      }
+
+      if (isLoggingIn) return;
+      isLoggingIn = true;
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span class="loading"></span>登录中...';
+
+      try {
+        // RSA 加密密码
+        const encryptedPassword = rsaEncrypt(password);
+
+        // 发送登录请求
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: username,
+            password: encryptedPassword,
+            platform: 'web'
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.access_token) {
+          // 保存 token
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('token_expires_in', data.expires_in);
+          localStorage.setItem('username', username);
+
+          showToast('登录成功！即将进入系统...', 'success');
+
+          // 延迟跳转
+          setTimeout(() => {
+            // 尝试打开主页面（需要根据实际路由调整）
+            window.location.href = '/';
+          }, 1500);
+        } else {
+          throw new Error(data.msg || '登录失败');
+        }
+      } catch (error) {
+        showToast(error.message || '登录失败，请检查用户名和密码', 'error');
+        loginBtn.disabled = false;
+        loginBtn.textContent = '登录';
+        isLoggingIn = false;
+      }
+    }
+
+    // 快速登录
+    function quickLogin(username, password) {
+      document.getElementById('username').value = username;
+      document.getElementById('password').value = password;
+      handleLogin();
+    }
+
+    // 回车登录
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+
+    // 检查是否已登录
+    if (localStorage.getItem('access_token')) {
+      const username = localStorage.getItem('username');
+      if (username) {
+        showToast(`已登录为 ${username}，正在跳转...`, 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      }
+    }
+
+    // 加载 JSEncrypt（可选，用于生产环境）
+    // document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.1/jsencrypt.min.js"><\/script>');
+  </script>
+</body>
+</html>
