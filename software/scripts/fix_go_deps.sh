@@ -189,9 +189,13 @@ if [ -f go.sum ]; then
     echo "  已备份: go.sum -> go.sum.backup"
 fi
 
-# 4. 移除不兼容的依赖版本
+# 4. 修复依赖版本问题
 echo ""
-echo "移除不兼容的依赖版本..."
+echo "修复依赖版本问题..."
+
+# 修复域名拼写错误: filipio.io -> filippo.io
+sed -i 's/filipio\.io/filippo.io/g' go.mod
+sed -i 's/filipio\.io/filippo.io/g' go.sum
 
 # 移除 google.golang.org/genproto 相关的 require 行
 sed -i '/google.golang.org\/genproto\/googleapis\/api/d' go.mod
@@ -201,7 +205,7 @@ sed -i '/google.golang.org\/genproto\/googleapis\/rpc/d' go.mod
 sed -i '/buf.build\/gen\/go\/bufbuild/d' go.mod
 sed -i '/buf.build\/go\/protovalidate/d' go.mod
 
-echo "  已移除不兼容依赖"
+echo "  已修复依赖版本"
 
 # 5. 添加兼容 Go 1.22 的 replace 规则
 echo ""
