@@ -4,7 +4,7 @@
 # 使用方式: sudo ./environment-check.sh
 #===============================================================================
 
-set -e
+# 不使用 set -e，允许脚本继续执行即使部分检查失败
 
 # 配置
 APP_NAME="LumenIM"
@@ -108,12 +108,19 @@ MEM_FREE=$(free -h | grep Mem | awk '{print $4}')
 result pass "内存总量: $MEM_TOTAL (已用: $MEM_USED, 可用: $MEM_FREE)"
 
 # 1.4 磁盘检查
-DISK_USAGE=$(df -h / | tail -1 | awk '{print $5}' | sed 's/%//')
-DISK_AVAIL=$(df -h / | tail -1 | awk '{print $4}')
-if [ "$DISK_USAGE" -lt 80 ]; then
-    result pass "磁盘使用率: ${DISK_USAGE}% (可用: $DISK_AVAIL)"
+DF_OUTPUT=$(df -h / 2>/dev/null | tail -1)
+DISK_USAGE=$(echo "$DF_OUTPUT" | awk '{print $5}' | sed 's/%//' | grep -oE '[0-9]+' | head -1)
+DISK_AVAIL=$(echo "$DF_OUTPUT" | awk '{print $4}')
+
+# 确保 DISK_USAGE 是数字
+if [ -z "$DISK_USAGE" ] || ! [[ "$DISK_USAGE" =~ ^[0-9]+$ ]]; then
+    result warn "磁盘使用率: 无法获取"
 else
-    result warn "磁盘使用率: ${DISK_USAGE}% (可用: $DISK_AVAIL) - 建议清理"
+    if [ "$DISK_USAGE" -lt 80 ]; then
+        result pass "磁盘使用率: ${DISK_USAGE}% (可用: $DISK_AVAIL)"
+    else
+        result warn "磁盘使用率: ${DISK_USAGE}% (可用: $DISK_AVAIL) - 建议清理"
+    fi
 fi
 
 # 1.5 运行时间
@@ -140,7 +147,18 @@ else
 fi
 
 # 2.3 本地端口检查
-if netstat -tlnp 2>/dev/null | grep -q ":" || ss -tlnp 2>/dev/null | grep -q ":"; then
+NETSTAT_OK=false
+SS_OK=false
+
+if command -v netstat &>/dev/null && netstat -tlnp 2>/dev/null | grep -q ":"; then
+    NETSTAT_OK=true
+fi
+
+if command -v ss &>/dev/null && ss -tlnp 2>/dev/null | grep -q ":"; then
+    SS_OK=true
+fi
+
+if [ "$NETSTAT_OK" = true ] || [ "$SS_OK" = true ]; then
     result pass "网络服务: 正常"
 else
     result warn "网络服务: 无法检测"
@@ -370,7 +388,9 @@ if command -v curl &>/dev/null; then
 
         # 9.2 响应时间
         RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" --connect-timeout 5 "$HEALTH_URL" 2>/dev/null || echo "0")
-        if (( $(echo "$RESPONSE_TIME < 1" | bc -l 2>/dev/null || echo 1) )); then
+        # 使用 awk 进行浮点数比较（避免依赖 bc）
+        IS_FAST=$(echo "$RESPONSE_TIME 1" | awk '{if ($1 < $2) print 1; else print 0}')
+        if [ "$IS_FAST" = "1" ]; then
             result pass "响应时间: ${RESPONSE_TIME}s (良好)"
         else
             result warn "响应时间: ${RESPONSE_TIME}s (较慢)"
@@ -467,7 +487,9 @@ wait
 END_TIME=$(date +%s.%N)
 DURATION=$(echo "$END_TIME - $START_TIME" | bc 2>/dev/null || echo "0")
 
-if (( $(echo "$DURATION < 3" | bc -l 2>/dev/null || echo 1) )); then
+# 使用 awk 进行浮点数比较（避免依赖 bc）
+IS_GOOD=$(echo "$DURATION 3" | awk '{if ($1 < $2) print 1; else print 0}')
+if [ "$IS_GOOD" = "1" ]; then
     result pass "并发性能: ${DURATION}s (良好)"
 else
     result warn "并发性能: ${DURATION}s (较慢)"
