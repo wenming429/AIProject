@@ -1,0 +1,816 @@
+{
+	"info": {
+		"name": "LumenIM API 测试集合",
+		"description": "LumenIM 后端 API 完整测试套件，包含功能、性能和安全测试",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:9501/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "friendId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "groupId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. 健康检查",
+			"item": [
+				{
+					"name": "健康检查",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('响应时间小于500ms', function() {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"});",
+									"pm.test('返回JSON格式', function() {",
+									"    pm.response.to.be.json();",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. 用户认证",
+			"item": [
+				{
+					"name": "2.1 用户注册 - 有效参数",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('返回成功标识', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(200);",
+									"});",
+									"pm.test('保存用户ID', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('userId', jsonData.data.id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser{{$timestamp}}\",\n    \"password\": \"Test123456\",\n    \"nickname\": \"测试用户\",\n    \"email\": \"test{{$timestamp}}@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "register"]
+						}
+					}
+				},
+				{
+					"name": "2.2 用户注册 - 用户名已存在",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回错误状态码', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([400, 409, 500]);",
+									"});",
+									"pm.test('返回错误信息', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.msg).to.include('存在' | '已存在' | '重复');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser001\",\n    \"password\": \"Test123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "register"]
+						}
+					}
+				},
+				{
+					"name": "2.3 用户注册 - 密码强度不足",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回错误状态码', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([400, 422]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newuser\",\n    \"password\": \"123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "register"]
+						}
+					}
+				},
+				{
+					"name": "2.4 用户登录 - 有效",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('返回token', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"});",
+									"pm.test('保存token到变量', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set('token', jsonData.data.token);",
+									"        console.log('Token saved:', jsonData.data.token.substring(0, 20) + '...');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser001\",\n    \"password\": \"Test123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "login"]
+						}
+					}
+				},
+				{
+					"name": "2.5 用户登录 - 密码错误",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回认证失败状态码', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([401, 400]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser001\",\n    \"password\": \"WrongPassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. 好友管理",
+			"item": [
+				{
+					"name": "3.1 获取好友列表",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('返回数据格式正确', function() {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friend/list",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "list"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "3.2 添加好友",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码正确', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([200, 201, 400]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"friend_id\": 1001,\n    \"remark\": \"同事\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/friend/add",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "add"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "3.3 添加好友 - 添加自己(边界测试)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回错误', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([400, 403, 500]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"friend_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/friend/add",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "add"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "4. 消息功能",
+			"item": [
+				{
+					"name": "4.1 发送私聊消息",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('响应时间小于1秒', function() {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"receiver_id\": 1001,\n    \"content\": \"你好，这是一条测试消息\",\n    \"msg_type\": \"text\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["message", "send"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "4.2 获取聊天记录",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/message/history?user_id=1001&limit=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["message", "history"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1001"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "4.3 发送空消息(边界测试)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应拒绝空消息或正常处理', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([200, 400, 422]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"receiver_id\": 1001,\n    \"content\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["message", "send"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "5. 群组功能",
+			"item": [
+				{
+					"name": "5.1 创建群组",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码为200或201', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([200, 201]);",
+									"});",
+									"pm.test('保存群组ID', function() {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('groupId', jsonData.data.id);",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"测试群组{{$timestamp}}\",\n    \"description\": \"这是一个测试群组\",\n    \"max_members\": 200\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/group/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["group", "create"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "5.2 发送群消息",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('状态码正确', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([200, 201, 400]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_id\": 1,\n    \"content\": \"群消息测试\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message/group/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["message", "group", "send"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "6. 安全测试",
+			"item": [
+				{
+					"name": "6.1 无Token访问",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回401未授权', function() {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/friend/list",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "list"]
+						}
+					}
+				},
+				{
+					"name": "6.2 无效Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应返回401未授权', function() {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_token_xxx"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/friend/list",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "list"]
+						}
+					}
+				},
+				{
+					"name": "6.3 SQL注入测试 - 登录",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应拒绝SQL注入', function() {",
+									"    var code = pm.response.status;",
+									"    var jsonData = pm.response.json();",
+									"    // 应该不返回成功，且不暴露数据库错误",
+									"    pm.expect(jsonData.data).to.not.have.property('token');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\\\" OR \\\"1\\\"=\\\"1\",\n    \"password\": \"any\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "login"]
+						}
+					}
+				},
+				{
+					"name": "6.4 XSS测试",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应处理XSS内容', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([200, 400, 422]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"receiver_id\": 1001,\n    \"content\": \"<script>alert(1)</script>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/message/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["message", "send"]
+						}
+					},
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{token}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "6.5 负数ID测试",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('应拒绝负数ID', function() {",
+									"    var code = pm.response.status;",
+									"    pm.expect(code).to.be.oneOf([400, 422, 500]);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/friend/delete/-1",
+							"host": ["{{baseUrl}}"],
+							"path": ["friend", "delete", "-1"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
