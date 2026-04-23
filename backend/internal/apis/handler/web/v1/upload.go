@@ -51,7 +51,7 @@ func (u *Upload) Image(ctx *gin.Context) (*web.UploadImageResponse, error) {
 	}
 
 	return &web.UploadImageResponse{
-		Src: u.Filesystem.PublicUrl(u.Filesystem.BucketPublicName(), object),
+		Src: u.Filesystem.RelativeUrl(u.Filesystem.BucketPublicName(), object),
 	}, nil
 }
 

@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_RSA_PUBLIC_KEY: string
   readonly VITE_BASE_API: string
   readonly VITE_SOCKET_API: string
+  readonly VITE_MEDIA_URL?: string // 媒体资源域名（可选）
 }
 
 declare interface Window {

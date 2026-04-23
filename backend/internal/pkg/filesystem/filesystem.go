@@ -41,6 +41,9 @@ type IFilesystem interface {
 	// PublicUrl 获取公开文件的访问地址
 	PublicUrl(bucketName, objectName string) string
 
+	// RelativeUrl 获取相对路径（不含域名），用于保存到数据库
+	RelativeUrl(bucketName, objectName string) string
+
 	// PrivateUrl 获取私有文件的访问地址
 	PrivateUrl(bucketName, objectName string, filename string, expire time.Duration) string
 
@@ -80,6 +83,9 @@ type LocalSystemConfig struct {
 	BucketPublic  string `json:"bucket_public" yaml:"bucket_public"`
 	BucketPrivate string `json:"bucket_private" yaml:"bucket_private"`
 	Endpoint      string `json:"endpoint" yaml:"endpoint"`
+	// PublicUrl 公网访问域名（可选），如果配置则用于公网访问，不配置则使用 Endpoint
+	// 示例: https://your-domain.com 或 https://cdn.your-domain.com
+	PublicUrl string `json:"public_url" yaml:"public_url"`
 }
 
 // MinioSystemConfig 私有化 Minio 配置信息
@@ -90,4 +96,7 @@ type MinioSystemConfig struct {
 	BucketPublic  string `json:"bucket_public" yaml:"bucket_public"`
 	BucketPrivate string `json:"bucket_private" yaml:"bucket_private"`
 	Endpoint      string `json:"endpoint" yaml:"endpoint"`
+	// PublicUrl 公网访问域名（可选），如果配置则用于公网访问，不配置则使用 Endpoint
+	// 示例: https://your-domain.com 或 https://cdn.your-domain.com
+	PublicUrl string `json:"public_url" yaml:"public_url"`
 }

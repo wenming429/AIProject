@@ -103,7 +103,32 @@ func (m MinioFilesystem) GetObject(bucketName string, objectName string) ([]byte
 	return io.ReadAll(object)
 }
 
+// RelativeUrl 获取相对路径（不含域名），用于保存到数据库
+func (m MinioFilesystem) RelativeUrl(bucketName, objectName string) string {
+	return fmt.Sprintf(
+		"/%s/%s",
+		bucketName,
+		strings.Trim(objectName, "/"),
+	)
+}
+
 func (m MinioFilesystem) PublicUrl(bucketName, objectName string) string {
+	// 优先使用 PublicUrl 配置（公网域名），否则使用 Presigned URL
+	if m.config.PublicUrl != "" {
+		domain := m.config.PublicUrl
+		if m.config.SSL {
+			domain = fmt.Sprintf("https://%s", domain)
+		} else {
+			domain = fmt.Sprintf("http://%s", domain)
+		}
+		return fmt.Sprintf(
+			"%s/%s/%s",
+			strings.TrimRight(domain, "/"),
+			bucketName,
+			strings.Trim(objectName, "/"),
+		)
+	}
+
 	uri, err := m.core.Client.PresignedGetObject(context.Background(), bucketName, objectName, 30*time.Minute, nil)
 	if err != nil {
 		panic(err)

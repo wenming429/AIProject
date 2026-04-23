@@ -137,10 +137,25 @@ func (l LocalFilesystem) GetObject(bucketName string, objectName string) ([]byte
 	return os.ReadFile(l.Path(bucketName, objectName))
 }
 
+// RelativeUrl 获取相对路径（不含域名），用于保存到数据库
+func (l LocalFilesystem) RelativeUrl(bucketName, objectName string) string {
+	return fmt.Sprintf(
+		"/%s/%s",
+		bucketName,
+		strings.Trim(objectName, "/"),
+	)
+}
+
 func (l LocalFilesystem) PublicUrl(bucketName, objectName string) string {
-	domain := fmt.Sprintf("http://%s", l.config.Endpoint)
-	if l.config.SSL {
-		domain = fmt.Sprintf("https://%s", l.config.Endpoint)
+	// 优先使用 PublicUrl 配置（公网域名），否则使用 Endpoint
+	var domain string
+	if l.config.PublicUrl != "" {
+		domain = l.config.PublicUrl
+	} else {
+		domain = fmt.Sprintf("http://%s", l.config.Endpoint)
+		if l.config.SSL {
+			domain = fmt.Sprintf("https://%s", l.config.Endpoint)
+		}
 	}
 
 	return fmt.Sprintf(

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gzydong/go-chat/internal/logic"
@@ -92,6 +94,28 @@ type Service struct {
 	PushMessage         *logic.PushMessage
 }
 
+// convertToRelativeUrl 将完整 URL 转换为相对路径
+// 例如: http://localhost:9501/public/xxx.jpg -> /public/xxx.jpg
+// 如果已经是相对路径则直接返回
+func (s *Service) convertToRelativeUrl(fullUrl string) string {
+	if fullUrl == "" {
+		return fullUrl
+	}
+
+	// 如果已经是相对路径，直接返回
+	if strings.HasPrefix(fullUrl, "/") {
+		return fullUrl
+	}
+
+	// 解析 URL 并提取路径部分
+	u, err := url.Parse(fullUrl)
+	if err != nil {
+		return fullUrl
+	}
+
+	return u.Path
+}
+
 func (s *Service) CreateMessage(ctx context.Context, option CreateMessageOption) error {
 	if option.TalkMode == 1 {
 		return s.CreatePrivateMessage(ctx, CreatePrivateMessageOption{
@@ -130,6 +154,9 @@ func (s *Service) CreateTextMessage(ctx context.Context, option CreateTextMessag
 }
 
 func (s *Service) CreateImageMessage(ctx context.Context, option CreateImageMessage) error {
+	// 转换完整 URL 为相对路径（如果包含域名）
+	imageUrl := s.convertToRelativeUrl(option.Url)
+
 	return s.CreateMessage(ctx, CreateMessageOption{
 		MsgId:    option.MsgId,
 		TalkMode: option.TalkMode,
@@ -139,7 +166,7 @@ func (s *Service) CreateImageMessage(ctx context.Context, option CreateImageMess
 		QuoteId:  option.QuoteId,
 		Extra: jsonutil.Encode(model.TalkRecordExtraImage{
 			Size:   option.Size,
-			Url:    option.Url,
+			Url:    imageUrl,
 			Width:  option.Width,
 			Height: option.Height,
 		}),
@@ -147,6 +174,9 @@ func (s *Service) CreateImageMessage(ctx context.Context, option CreateImageMess
 }
 
 func (s *Service) CreateVoiceMessage(ctx context.Context, option CreateVoiceMessage) error {
+	// 转换完整 URL 为相对路径
+	audioUrl := s.convertToRelativeUrl(option.Url)
+
 	return s.CreateMessage(ctx, CreateMessageOption{
 		TalkMode: option.TalkMode,
 		FromId:   option.FromId,
@@ -155,13 +185,17 @@ func (s *Service) CreateVoiceMessage(ctx context.Context, option CreateVoiceMess
 		Extra: jsonutil.Encode(model.TalkRecordExtraAudio{
 			Name:     "",
 			Size:     option.Size,
-			Url:      option.Url,
+			Url:      audioUrl,
 			Duration: option.Duration,
 		}),
 	})
 }
 
 func (s *Service) CreateVideoMessage(ctx context.Context, option CreateVideoMessage) error {
+	// 转换完整 URL 为相对路径
+	videoUrl := s.convertToRelativeUrl(option.Url)
+	coverUrl := s.convertToRelativeUrl(option.Cover)
+
 	return s.CreateMessage(ctx, CreateMessageOption{
 		TalkMode: option.TalkMode,
 		FromId:   option.FromId,
@@ -169,9 +203,9 @@ func (s *Service) CreateVideoMessage(ctx context.Context, option CreateVideoMess
 		MsgType:  entity.ChatMsgTypeVideo,
 		Extra: jsonutil.Encode(model.TalkRecordExtraVideo{
 			Name:     "",
-			Cover:    option.Cover,
+			Cover:    coverUrl,
 			Size:     option.Size,
-			Url:      option.Url,
+			Url:      videoUrl,
 			Duration: option.Duration,
 		}),
 	})
@@ -185,7 +219,8 @@ func (s *Service) CreateFileMessage(ctx context.Context, option CreateFileMessag
 		return err
 	}
 
-	publicUrl := ""
+	// 使用相对路径
+	relativeUrl := ""
 	filePath := fmt.Sprintf("talk-files/%s/%s.%s", now.Format("200601"), uuid.New().String(), file.FileExt)
 
 	// 公开文件
@@ -199,7 +234,7 @@ func (s *Service) CreateFileMessage(ctx context.Context, option CreateFileMessag
 			return err
 		}
 
-		publicUrl = s.Filesystem.PublicUrl(s.Filesystem.BucketPublicName(), filePath)
+		relativeUrl = s.Filesystem.RelativeUrl(s.Filesystem.BucketPublicName(), filePath)
 	} else {
 		if err := s.Filesystem.Copy(s.Filesystem.BucketPrivateName(), file.Path, filePath); err != nil {
 			return err
@@ -217,7 +252,7 @@ func (s *Service) CreateFileMessage(ctx context.Context, option CreateFileMessag
 		message.MsgType = entity.ChatMsgTypeAudio
 		message.Extra = jsonutil.Encode(&model.TalkRecordExtraAudio{
 			Size:     int(file.FileSize),
-			Url:      publicUrl,
+			Url:      relativeUrl,
 			Duration: 0,
 		})
 	case entity.MediaFileVideo:
@@ -225,7 +260,7 @@ func (s *Service) CreateFileMessage(ctx context.Context, option CreateFileMessag
 		message.Extra = jsonutil.Encode(&model.TalkRecordExtraVideo{
 			Cover:    "",
 			Size:     int(file.FileSize),
-			Url:      publicUrl,
+			Url:      relativeUrl,
 			Duration: 0,
 		})
 	case entity.MediaFileOther:

@@ -98,7 +98,10 @@ filesystem:
     bucket_public: "public"
     # 私有的 bucket
     bucket_private: "private"
-    endpoint: "im-cdn.xxx.com"
+    # 内部访问地址（用于后端服务间通信）
+    endpoint: "localhost:9501"
+    # 公网访问域名（可选，用于外部访问，如果配置则优先使用此域名）
+    # public_url: "https://your-domain.com"
     ssl: false
   minio:
     secret_id: "xxxxxx"
@@ -107,7 +110,10 @@ filesystem:
     bucket_public: "im-static"
     # 私有的 bucket
     bucket_private: "im-private"
-    endpoint: "im-cdn.xxx.com"
+    # 内部访问地址（用于后端服务间通信）
+    endpoint: "localhost:9501"
+    # 公网访问域名（可选，用于外部访问，如果配置则优先使用此域名）
+    # public_url: "https://your-domain.com"
     ssl: false
 
 # 邮件配置
