@@ -1,0 +1,46 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "LumenIM-Test",
+  "version": "1.0.0",
+  "identifier": "com.lumenim.desktop.test",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "LumenIM",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://localhost:9000 http://localhost:5173 http://192.168.23.131:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' 'nonce-*'; style-src-elem 'self' 'unsafe-inline' 'nonce-*'; style-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; img-src 'self' data: blob: asset: https: http://localhost:* http://192.168.23.131:*; font-src 'self' data:; connect-src 'self' ipc: http://localhost:* http://192.168.23.131:* https://* ws://localhost:* wss://localhost:* ws://* wss://* ws://192.168.23.131:* wss://192.168.23.131:*; frame-src 'self' http://localhost:5173 blob:; media-src 'self' blob: http://localhost:* http://192.168.23.131:* https://*; object-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

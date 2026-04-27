@@ -72,7 +72,7 @@ export default defineConfig(({ mode }) => {
       proxy: isDev
         ? {
             '/api': {
-              target: 'http://localhost:9501',
+              target: env.VITE_API_BASE_URL || 'http://localhost:9501',
               changeOrigin: true
             }
           }
