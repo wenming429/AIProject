@@ -1,8 +1,8 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "LumenIM-Local",
+  "productName": "LumenIM",
   "version": "1.0.0",
-  "identifier": "com.lumenim.desktop.local",
+  "identifier": "com.lumenim.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "LumenIM-Local",
+        "title": "LumenIM",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' http://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' data: blob: asset:; img-src 'self' data: blob: asset: http://localhost:*; font-src 'self' data:; connect-src 'self' ipc: http://localhost:* https://* ws://localhost:* wss://localhost:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: http://localhost:*; object-src 'self' blob:"
+      "csp": "default-src 'self' https://api.lumenim.com https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' data: blob: asset:; img-src 'self' data: blob: asset: https://api.lumenim.com https://*; font-src 'self' data:; connect-src 'self' ipc: https://api.lumenim.com https://* https://* wss://api.lumenim.com:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: https://api.lumenim.com https://*; object-src 'self' blob:"
     }
   },
   "bundle": {
