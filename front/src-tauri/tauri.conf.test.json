@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' http://localhost:* http://192.168.23.131:*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' data: blob: asset:; img-src 'self' data: blob: asset: http://localhost:* http://192.168.23.131:*; font-src 'self' data:; connect-src 'self' ipc: http://localhost:* http://192.168.23.131:* https://* ws://localhost:* wss://localhost:* ws://192.168.23.131:* wss://192.168.23.131:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: http://localhost:* http://192.168.23.131:*; object-src 'self' blob:"
+      "csp": "default-src 'self' http://localhost:* http://192.168.23.131:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://192.168.23.131:* https://*; style-src 'self' 'unsafe-inline' 'unsafe-hashes' data: blob: asset: http://localhost:* http://192.168.23.131:* https://*; style-src-elem 'self' 'unsafe-inline' data: blob: asset: http://localhost:* http://192.168.23.131:* https://*; style-src-attr 'self' 'unsafe-inline' 'unsafe-hashes' data: blob:; img-src 'self' data: blob: asset: http://localhost:* http://192.168.23.131:* https://*; font-src 'self' data: http://localhost:* http://192.168.23.131:* https://*; connect-src 'self' ipc: http://localhost:* http://192.168.23.131:* https://* ws://localhost:* wss://localhost:* ws://192.168.23.131:* wss://192.168.23.131:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: http://localhost:* http://192.168.23.131:* https://*; object-src 'self' blob:; base-uri 'self'; form-action 'self'"
     }
   },
   "bundle": {

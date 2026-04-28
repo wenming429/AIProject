@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' https://api.lumenim.com https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' data: blob: asset:; img-src 'self' data: blob: asset: https://api.lumenim.com https://*; font-src 'self' data:; connect-src 'self' ipc: https://api.lumenim.com https://* https://* wss://api.lumenim.com:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: https://api.lumenim.com https://*; object-src 'self' blob:"
+      "csp": "default-src 'self' https://api.lumenim.com https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.lumenim.com https://*; style-src 'self' 'unsafe-inline' 'unsafe-hashes' data: blob: asset: https://api.lumenim.com https://*; style-src-elem 'self' 'unsafe-inline' data: blob: asset: https://api.lumenim.com https://*; style-src-attr 'self' 'unsafe-inline' 'unsafe-hashes' data: blob:; img-src 'self' data: blob: asset: https://api.lumenim.com https://*; font-src 'self' data: https://api.lumenim.com https://*; connect-src 'self' ipc: https://api.lumenim.com https://* wss://api.lumenim.com:* ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: https://api.lumenim.com https://*; object-src 'self' blob:; base-uri 'self'; form-action 'self'"
     }
   },
   "bundle": {

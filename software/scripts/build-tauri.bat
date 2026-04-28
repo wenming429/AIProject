@@ -179,7 +179,7 @@ REM ========================================
         echo       }
         echo     ],
         echo     "security": {
-        echo       "csp": "default-src 'self' %CSP_ALLOW_HOSTS%; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' data: blob: asset:; img-src 'self' data: blob: asset: %CSP_ALLOW_HOSTS%; font-src 'self' data:; connect-src 'self' ipc: %CSP_ALLOW_HOSTS% https://* %CSP_ALLOW_WS% ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: %CSP_ALLOW_HOSTS%; object-src 'self' blob:"
+        echo       "csp": "default-src 'self' %CSP_ALLOW_HOSTS% https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' %CSP_ALLOW_HOSTS% https://*; style-src 'self' 'unsafe-inline' 'unsafe-hashes' data: blob: asset: %CSP_ALLOW_HOSTS% https://*; style-src-elem 'self' 'unsafe-inline' data: blob: asset: %CSP_ALLOW_HOSTS% https://*; style-src-attr 'self' 'unsafe-inline' 'unsafe-hashes' data: blob:; img-src 'self' data: blob: asset: %CSP_ALLOW_HOSTS% https://*; font-src 'self' data: %CSP_ALLOW_HOSTS% https://*; connect-src 'self' ipc: %CSP_ALLOW_HOSTS% https://* %CSP_ALLOW_WS% ws://* wss://*; frame-src 'self' blob:; media-src 'self' blob: %CSP_ALLOW_HOSTS% https://*; object-src 'self' blob:; base-uri 'self'; form-action 'self'"
         echo     }
         echo   },
         echo   "bundle": {
